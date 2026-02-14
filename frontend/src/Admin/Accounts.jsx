@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import logo from '../assets/MGC.png';
 import { useEffect } from "react";
 import { useState } from "react";
@@ -12,16 +13,32 @@ export default function Accounts() {
     const navigate = useNavigate()
 
     const queryClient = useQueryClient()
+    const [page, setPage] = useState(1)
 
-    // const [ridersData, setRidersData] = useState("")
-    // const [ordersData, setOrdersData] = useState()
+    const getYesterdayDate = () => {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        return yesterday.toISOString().split('T')[0];
+    };
+    const getTodayDate = () => {
+        const today = new Date().toISOString().split('T')[0];
+        return today;
+    }
+
+    const [filterStartDate, setFilterStartDate] = useState(getYesterdayDate())
+    const [filterEndDate, setFilterEndDate] = useState(getTodayDate())
+
+    const [filterStartDateReturnToVendor, setFilterStartDateReturnToVendor] = useState(getYesterdayDate())
+    const [filterEndDateReturnToVendor, setFilterEndDateReturnToVendor] = useState(getTodayDate())
+
+
     async function getOrders() {
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/');
             return;
         }
-        const data = await fetch('http://localhost:3000/orders/orders-rider-delivered', {
+        const data = await fetch(`${link}/orders/orders-rider-delivered?filterStartDate=${filterStartDate}&filterEndDate=${filterEndDate}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -45,8 +62,46 @@ export default function Accounts() {
         return info?.order;
     }
     const { data: ordersData, isLoading: ordersLoading, error: ordersError } = useQuery({
-        queryKey: ['orders'],
+        queryKey: ['ordersAccounts'],
         queryFn: getOrders,
+        retry: 1,
+        refetchOnWindowFocus: true,
+    })
+
+
+    async function getOrdersReturnToSender() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/');
+            return;
+        }
+        const data = await fetch(`${link}/orders/orders-rider-delivered/Amount-Delivered?filterStartDate=${filterStartDateReturnToVendor}&filterEndDate=${filterEndDateReturnToVendor}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+        })
+        if (data?.status === 401) {
+            localStorage.removeItem('token');
+            navigate('/');
+            return;
+        }
+        if (data?.status === 403) {
+            // Not authorized (not admin)
+            navigate('/');
+            return;
+        }
+        if (!data?.ok) {
+            throw new Error(`HTTP error! status: ${data.status}`);
+        }
+        const info = await data.json()
+        return info?.order;
+    }
+    const { data: ordersDataReturnToSender, isLoading: ordersLoadingReturnToSender, error: ordersErrorReturnToSender } = useQuery({
+        queryKey: ['ordersAccountsReturnToSender'],
+        queryFn: getOrdersReturnToSender,
+        enabled: page === 2,
         retry: 1,
         refetchOnWindowFocus: true,
     })
@@ -59,7 +114,7 @@ export default function Accounts() {
             navigate('/');
             return;
         }
-        const data = await fetch('http://localhost:3000/riders/', {
+        const data = await fetch(`${link}/riders/ridernames`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -83,7 +138,7 @@ export default function Accounts() {
         return info;
     }
     const { data: riderApiData, isLoading: ridersLoading, error: ridersError } = useQuery({
-        queryKey: ['riders'],
+        queryKey: ['riders-accounts'],
         queryFn: getRiders,
         retry: 1,
         refetchOnWindowFocus: false,
@@ -304,8 +359,6 @@ export default function Accounts() {
             alert('Error generating PDF. Please try again.');
         }
     };
-    const [filterStartDate, setFilterStartDate] = useState("")
-    const [filterEndDate, setFilterEndDate] = useState("")
 
 
     const filteredOrders = ordersData?.filter(a => a?.accountsStatus !== "Amount - Picked From Rider")?.filter(order => {
@@ -543,10 +596,7 @@ export default function Accounts() {
         }
     };
 
-    const [filterStartDateReturnToVendor, setFilterStartDateReturnToVendor] = useState("")
-    const [filterEndDateReturnToVendor, setFilterEndDateReturnToVendor] = useState("")
-
-    const filteredOrdersReturnToVendor = ordersData?.filter(a => a?.accountsStatus === "Amount - Picked From Rider")?.filter(order => {
+    const filteredOrdersReturnToVendor = ordersDataReturnToSender?.filter(a => a?.accountsStatus === "Amount - Picked From Rider")?.filter(order => {
         if (!filterStartDateReturnToVendor && !filterEndDateReturnToVendor) {
             return true;
         }
@@ -581,7 +631,6 @@ export default function Accounts() {
         )
     );
 
-    const [page, setPage] = useState(1)
 
 
     async function updateAccStatusLogic({orderId,status}) {
@@ -590,7 +639,7 @@ export default function Accounts() {
             navigate('/');
             return;
         }
-        const data = await fetch(`http://localhost:3000/orders/${orderId}`, {
+        const data = await fetch(`${link}/orders/${orderId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -616,7 +665,7 @@ export default function Accounts() {
     const updateAccStatusMutation = useMutation({
         mutationFn: updateAccStatusLogic,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            queryClient.invalidateQueries({ queryKey: ['ordersAccount'] });
         },
         onError: (error) => {
             console.error('Error assigning rider:', error);
@@ -632,6 +681,50 @@ export default function Accounts() {
     })
     function updateAccStatusFun(orderId, status) {
         updateAccStatusMutation.mutate({ orderId, status });
+    }
+
+    // Loading state
+    if (ordersLoading) {
+        return (
+            <div className="overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-2 justify-center items-center w-7/8! sm:w-3/4 h-screen">
+                <div className="text-center">
+                    <p className="text-lg">Loading data...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Error state
+    if (ordersError) {
+        return (
+            <div className="overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-2 justify-center items-center w-7/8! sm:w-3/4 h-screen">
+                <div className="text-center text-red-600">
+                    <p className="text-lg">Error loading data: {ordersError?.message}</p>
+                </div>
+            </div>
+        );
+    }
+
+
+    if (ordersLoadingReturnToSender) {
+        return (
+            <div className="overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-2 justify-center items-center w-7/8! sm:w-3/4 h-screen">
+                <div className="text-center">
+                    <p className="text-lg">Loading data...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Error state
+    if (ordersErrorReturnToSender) {
+        return (
+            <div className="overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-2 justify-center items-center w-7/8! sm:w-3/4 h-screen">
+                <div className="text-center text-red-600">
+                    <p className="text-lg">Error loading data: {ordersError?.message}</p>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -662,15 +755,15 @@ export default function Accounts() {
                                 <label htmlFor="search"><i className="fas fa-search text-gray-400 m-0 p-0"></i></label>
                                 <input onChange={(e) => setSearchTerm(e.target.value)} id="search" className="rounded pl-2 w-[150px] sm:w-full focus:outline-0 text-md! font-medium" type="search" placeholder="Search by rider name" />
                             </div>
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col md:flex-row items-center justify-between">
                                 <h2>{filterStartDate !== "" || filterEndDate !== "" ? filterStartDate + " to " + filterEndDate : "All Orders"}</h2>
                                 <button onClick={generatePDF} className="bg-green-600 rounded text-white p-2">Generate PDF</button>
                                 <div className="flex items-center gap-2">
                                     <label className="text-red-500 font-bold">Set Filter : </label>
                                     <h5 className="m-0 p-0">from</h5>
-                                    <input className="bg-blue-200 rounded" type="date" value={filterStartDate} onChange={(e) => setFilterStartDate(e.target.value)} />
+                                    <input className="bg-blue-200 rounded" type="date" value={filterStartDate} onChange={(e) => {setFilterStartDate(e.target.value), queryClient.invalidateQueries('ordersAccounts')}} />
                                     <h5 className="m-0 p-0">to</h5>
-                                    <input className="bg-red-200 rounded" type="date" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} />
+                                    <input className="bg-red-200 rounded" type="date" value={filterEndDate} onChange={(e) => {setFilterEndDate(e.target.value), queryClient.invalidateQueries('ordersAccounts')}} />
                                 </div>
                             </div>
                             <div className='w-full h-auto overflow-scroll'>
@@ -719,15 +812,15 @@ export default function Accounts() {
                                 <label htmlFor="search"><i className="fas fa-search text-gray-400 m-0 p-0"></i></label>
                                 <input onChange={(e) => setSearchTermReturnToVendor(e.target.value)} id="search" className="rounded pl-2 w-[150px] sm:w-full focus:outline-0 text-md! font-medium" type="search" placeholder="Search by Sender Name" />
                             </div>
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col md:flex-row items-center justify-between">
                                 <h2>{filterStartDateReturnToVendor !== "" || filterEndDateReturnToVendor !== "" ? filterStartDateReturnToVendor + " to " + filterEndDateReturnToVendor : "All Orders"}</h2>
                                 <button onClick={generatePDFReturnToVendor} className="bg-green-600 rounded text-white p-2">Generate PDF</button>
                                 <div className="flex items-center gap-2">
                                     <label className="text-red-500 font-bold">Set Filter : </label>
                                     <h5 className="m-0 p-0">from</h5>
-                                    <input className="bg-blue-200 rounded" type="date" value={filterStartDateReturnToVendor} onChange={(e) => setFilterStartDateReturnToVendor(e.target.value)} />
+                                    <input className="bg-blue-200 rounded" type="date" value={filterStartDateReturnToVendor} onChange={(e) => {setFilterStartDateReturnToVendor(e.target.value), queryClient.invalidateQueries('ordersAccountsReturnToSender')}} />
                                     <h5 className="m-0 p-0">to</h5>
-                                    <input className="bg-red-200 rounded" type="date" value={filterEndDateReturnToVendor} onChange={(e) => setFilterEndDateReturnToVendor(e.target.value)} />
+                                    <input className="bg-red-200 rounded" type="date" value={filterEndDateReturnToVendor} onChange={(e) => {setFilterEndDateReturnToVendor(e.target.value), queryClient.invalidateQueries('ordersAccountsReturnToSender')}} />
                                 </div>
                             </div>
                             <div className='w-full h-auto overflow-scroll'>

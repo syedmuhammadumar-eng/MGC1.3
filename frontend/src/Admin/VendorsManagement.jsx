@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
@@ -27,7 +28,7 @@ export default function VendorsManagement() {
             return;
         }
 
-        const data = await fetch('http://localhost:3000/users/vendor', {
+        const data = await fetch(`${link}/users/select/vendor`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

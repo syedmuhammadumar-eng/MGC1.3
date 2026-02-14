@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { useNavigate } from "react-router-dom"
 import logo from '../assets/MGC.png';
 
@@ -34,7 +35,7 @@ export default function RiderNavbar() {
         }
 
         // Create socket connection
-        const newSocket = io('http://localhost:3000', {
+        const newSocket = io(`${link}`, {
             transports: ['websocket', 'polling'],
             auth: {
                 token: token
@@ -110,6 +111,49 @@ export default function RiderNavbar() {
         };
     }, []);
 
+
+    
+    const [audioUnlocked, setAudioUnlocked] = useState(false);
+    useEffect(() => {
+        const unlockAudio = () => {
+            setAudioUnlocked(true);
+            document.removeEventListener('click', unlockAudio);
+            document.removeEventListener('keydown', unlockAudio);
+        };
+        document.addEventListener('click', unlockAudio);
+        document.addEventListener('keydown', unlockAudio);
+        return () => {
+            document.removeEventListener('click', unlockAudio);
+            document.removeEventListener('keydown', unlockAudio);
+        };
+    }, []);
+
+    function playBell() {
+        const bell = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ");
+
+        bell.play().catch(() => {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + 0.3);
+        });
+    }
+    useEffect(() => {
+        if(newPickupNotif > 0 || newDeliveryNotif > 0 || newReturnNotif > 0){
+            playBell();
+        }
+    },[newPickupNotif,newDeliveryNotif,newReturnNotif])
+
     return (
         <div className="py-2 px-2 flex items-center justify-between! bg-white text-[#041026] text-lg font-md w-full! xl:w-300!">
 
@@ -139,6 +183,7 @@ export default function RiderNavbar() {
                 <button onClick={() => { localStorage.removeItem("token"), window.location.reload() }} className="text-red-500 font-bold! text-nowrap border-b border-gray-200 w-full flex justify-between py-3 pl-4 text-lg">Logout</button>
             </div>
             <div className="transition-all duration-1000 ease-in-out flex xl:hidden items-center text-[#041026] text-3xl">
+                <i className={`-mt-5 ${newPickupNotif || newDeliveryNotif || newReturnNotif > 0 ? "bg-red-500 text-white flex justify-center items-center w-3 h-3 rounded-[50%]!" : null}`}></i>
                 <i onClick={() => setToggle(!toggle)} className={`fa-solid fa-bars cursor-pointer transition-all duration-500`}></i>
             </div>
             <>

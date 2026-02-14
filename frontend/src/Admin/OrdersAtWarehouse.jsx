@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useState, useContext, useEffect } from 'react'
 import { Global } from "../global";
@@ -15,7 +16,7 @@ export default function UnassignedOrders() {
             navigate('/');
             return;
         }
-        const data = await fetch('http://localhost:3000/orders/orders-at-warehouse', {
+        const data = await fetch(`${link}/orders/orders-at-warehouse`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

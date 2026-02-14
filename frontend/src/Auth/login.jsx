@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useContext, useState } from 'react';
 import { Global } from '../global';
@@ -18,7 +19,7 @@ export default function Login() {
     const [apiData,setApiData] = useState("");
     async function submit(e) {
         e.preventDefault();
-        const loginRes = await fetch('http://localhost:3000/users/login', {
+        const loginRes = await fetch(`${link}/users/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -46,6 +47,16 @@ export default function Login() {
         }
         if (data?.message === "vendor") {
             navigate('/vendor-page')
+            setOpenMenuLogin(false);
+            localStorage.setItem("name", data?.name);
+        }
+        if (data?.message === "accountant") {
+            navigate('/Accountant')
+            setOpenMenuLogin(false);
+            localStorage.setItem("name", data?.name);
+        }
+        if (data?.message === "manager") {
+            navigate('/Manager')
             setOpenMenuLogin(false);
             localStorage.setItem("name", data?.name);
         }

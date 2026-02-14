@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
 import { BrowserMultiFormatReader } from "@zxing/library";
@@ -127,7 +128,7 @@ export default function WarehouseScanner() {
       return;
     }
 
-    const data = await fetch('http://localhost:3000/orders/orders-with-rider-scan-at-warehouse', {
+    const data = await fetch(`${link}/orders/orders-with-rider-scan-at-warehouse`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -152,7 +153,7 @@ export default function WarehouseScanner() {
     return info;
   }
   const { data: apiData, isLoading: ordersLoading, error: ordersError } = useQuery({
-    queryKey: ['orders'],
+    queryKey: ['orders-to-scan-at-warehouse'],
     queryFn: getOrdersAtWarehouse,
     retry: 1,
     refetchOnWindowFocus: false
@@ -162,7 +163,7 @@ export default function WarehouseScanner() {
 
   // -------------------Add to warehouse-------------------------------
   async function addToWarehouseFunLogic(id) {
-    const data = await fetch(`http://localhost:3000/orders/${id}`, {
+    const data = await fetch(`${link}/orders/${id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -196,7 +197,7 @@ export default function WarehouseScanner() {
         autoClose: 3000,
       })
       // setResult(undefined)
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders-to-scan-at-warehouse'] });
     },
     onError: (error) => {
       console.error('Error :', error);
@@ -216,7 +217,7 @@ export default function WarehouseScanner() {
 
   // -------------------Add to warehouse cancelled order -------------------------------
   async function addToWarehouseCanelledOrderFunLogic(id) {
-    const data = await fetch(`http://localhost:3000/orders/${id}`, {
+    const data = await fetch(`${link}/orders/${id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -250,7 +251,7 @@ export default function WarehouseScanner() {
         autoClose: 3000,
       })
       // setResult(undefined)
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders-to-scan-at-warehouse'] });
     },
     onError: (error) => {
       console.error('Error :', error);

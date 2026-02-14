@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import logo from '../assets/MGC.png';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useState, useContext, useEffect } from 'react'
@@ -30,6 +31,8 @@ export default function VendorPage() {
         Dimensions: "",
         fragility: "Normal",
         weight: "",
+        CodType: "Cod",
+        RemarksText: "",
         // status: "Shipment - Booked",
         // creator: "",
     });
@@ -46,7 +49,7 @@ export default function VendorPage() {
             navigate('/');
             return;
         }
-        const data = await fetch('http://localhost:3000/orders/vendor', {
+        const data = await fetch(`${link}/orders/vendor`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -65,6 +68,8 @@ export default function VendorPage() {
                 Dimensions: formData.Dimensions,
                 fragility: formData.fragility,
                 weight: formData.weight,
+                CodType: formData.CodType,
+                RemarksText: formData.RemarksText,
             })
         })
         if (data?.status === 401) {
@@ -98,6 +103,8 @@ export default function VendorPage() {
                 Dimensions: "",
                 fragility: "Normal",
                 weight: "",
+                CodType: "Cod",
+                RemarksText: "",
             });
             setOpenMenuAddUser(false);
             toast.success("Please make sure to confirm your order", {
@@ -140,7 +147,7 @@ export default function VendorPage() {
             });
             return [];
         }
-        const data = await fetch('http://localhost:3000/orders/order-data-of-vendor', {
+        const data = await fetch(`${link}/orders/order-data-of-vendor`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -214,7 +221,7 @@ export default function VendorPage() {
     async function confirmOrderLogic(id) {
         try {
             const existingIds = JSON.parse(localStorage.getItem('confirmedOrderIds') || '[]');
-            const response = await fetch(`http://localhost:3000/orders/${id}`, {
+            const response = await fetch(`${link}/orders/${id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -280,7 +287,7 @@ export default function VendorPage() {
 
     async function deleteOrderLogic(id) {
         try {
-            const response = await fetch(`http://localhost:3000/orders/vendor/${id}`, {
+            const response = await fetch(`${link}/orders/vendor/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -486,6 +493,8 @@ export default function VendorPage() {
                                             <option value="Normal">Normal</option>
                                             <option value="Fragile">Fragile</option>
                                         </select>
+                                        <label className='text-gray-600 text-[17px]'>Order Date:</label>
+                                        <input required readOnly name="OrderDate" value={formData.OrderDate} type="text" className='text-gray-600 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='' />
                                     </div>
                                     <div className="w-full! lg:w-[47.5%]!">
                                         <label className='text-gray-600 text-[17px]'>Weight in Kg:</label>
@@ -497,10 +506,15 @@ export default function VendorPage() {
                                         <label className='text-gray-600 text-[17px]'>Pickup Address:</label>
                                         <input required name="PickupAddress" value={formData.PickupAddress} onChange={handleChange} type="text" className='text-gray-600 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='Pickup Address:' />
 
+                                        <label className='text-gray-600 text-[17px]'>Payment Type:</label>
+                                        <select name="CodType" value={formData.CodType} onChange={handleChange} className='border w-full rounded py-2 pl-3 text-[17px]! text-gray-400'>
+                                            <option value="Cod">Cod</option>
+                                            <option value="NonCod">Non Cod</option>
+                                        </select>
                                         <label className='text-gray-600 text-[17px]'>Order Amount:</label>
-                                        <input required name="OrderAmount" value={formData.OrderAmount} onChange={handleChange} type="number" className='text-gray-600 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='Amount' />
-                                        <label className='text-gray-600 text-[17px]'>Order Date:</label>
-                                        <input required readOnly name="OrderDate" value={formData.OrderDate} type="text" className='text-gray-600 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='' />
+                                        <input required={formData.CodType === "Cod"} name="OrderAmount" value={formData.OrderAmount} onChange={handleChange} type="number" className='text-gray-600 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='Amount' />
+                                        <label className='text-gray-600 text-[17px]'>Remarks Text:</label>
+                                        <input name="RemarksText" value={formData.RemarksText} onChange={handleChange} type="text" className='text-gray-600 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='Any Remarks for this order..' />
                                     </div>
                                 </div>
                                 <button type='submit' className='bg-[#041026] text-white rounded py-1 mt-[5px]!'>Add</button>
@@ -510,20 +524,21 @@ export default function VendorPage() {
                 </Dialog>
             </div>
 
-            <div className='overflow-x-scroll w-full 2xl:w-350!'>
+            <div className='print:hidden overflow-x-scroll w-full 2xl:w-350!'>
                 <table className="bg-white border w-full rounded-lg shadow-md">
                     <thead className="text-black border-b-2 border-black">
                         <tr>
                             <td className="p-2 text-center text-nowrap font-semibold">Order Type</td>
                             <td className="p-2 text-center text-nowrap font-semibold">Order Amount </td>
-                            {/* <td className="p-2 text-center text-nowrap font-semibold">Tracking Id </td> */}
-                            <td className="p-2 text-center text-nowrap font-semibold">Receiver Name </td>
-                            {/* <td className="p-2 text-center text-nowrap font-semibold">Delivery City </td> */}
-                            {/* <td className="p-2 text-center text-nowrap font-semibold">Pickup City </td> */}
-                            {/* <td className="p-2 text-center text-nowrap font-semibold">Order Date </td> */}
-                            <td className="p-2 text-center text-nowrap font-semibold">Receiver Contact</td>
+                            <td className="p-2 text-center text-nowrap font-semibold">Customer Name </td>
+                            <td className="p-2 text-center text-nowrap font-semibold">Payement Type </td>
+                            <td className="p-2 text-center text-nowrap font-semibold">Dimensions </td>
+                            <td className="p-2 text-center text-nowrap font-semibold">Pickup City </td>
+                            <td className="p-2 text-center text-nowrap font-semibold">Delivery City </td>
+                            <td className="p-2 text-center text-nowrap font-semibold">fragiliy </td>
+                            <td className="p-2 text-center text-nowrap font-semibold">Weight </td>
+                            <td className="p-2 text-center text-nowrap font-semibold">Customer Contact No </td>
                             <td className="p-2 text-center text-nowrap font-semibold">Delivery Address</td>
-                            <td className="p-2 text-center text-nowrap font-semibold">Dimensions</td>
                             <td className="p-2 text-center text-nowrap font-semibold">Pickup Address</td>
                             <td className="p-2 text-center text-nowrap font-semibold">Confirm</td>
                             <td className="p-2 text-center text-nowrap font-semibold">Status</td>
@@ -535,15 +550,16 @@ export default function VendorPage() {
                             filteredData?.map((a) => (
                                 <tr>
                                     <td className="p-2 text-center text-nowrap">{a?.OrderType}</td>
-                                    <td className="p-2 text-center text-nowrap">{a?.OrderAmount} Rs</td>
-                                    {/* <td className="p-2 text-center text-nowrap">{a?._id}</td> */}
+                                    <td className="p-2 text-center text-nowrap">{a?.OrderAmount}  {a?.OrderAmount ? "Rs" : " 0 Rs "}</td>
                                     <td className="p-2 text-center text-nowrap">{a?.CustomerName}</td>
-                                    {/* <td className="p-2 text-center text-nowrap">{a?.DeliveryCity}</td> */}
-                                    {/* <td className="p-2 text-center text-nowrap">{a?.PickupCity}</td> */}
-                                    {/* <td className="p-2 text-center text-nowrap">{a?.OrderDate}</td> */}
+                                    <td className="p-2 text-center text-nowrap">{a?.CodType}</td>
+                                    <td className="p-2 text-center text-nowrap">{a?.Dimensions}</td>
+                                    <td className="p-2 text-center text-nowrap">{a?.PickupCity}</td>
+                                    <td className="p-2 text-center text-nowrap">{a?.DeliveryCity}</td>
+                                    <td className="p-2 text-center text-nowrap">{a?.fragility}</td>
+                                    <td className="p-2 text-center text-nowrap">{a?.weight}</td>
                                     <td className="p-2 text-center text-nowrap">{a?.CustomerContactNo}</td>
                                     <td className="p-2 text-center text-nowrap max-w-[100px] text-wrap!">{a?.DeliveryAddress}</td>
-                                    <td className="p-2 text-center text-nowrap">{a?.Dimensions}</td>
                                     <td className="p-2 text-center text-nowrap max-w-[100px] text-wrap!">{a?.PickupAddress}</td>
                                     <td className="p-2 text-center text-nowrap">
                                         <button
@@ -559,7 +575,8 @@ export default function VendorPage() {
                                                 sx: {
                                                     width: "100%",
                                                     maxWidth: "900px",
-                                                    margin: "auto"
+                                                    margin: "auto",
+                                                    height: "100%"
                                                 }
                                             }}
                                         >
@@ -574,7 +591,7 @@ export default function VendorPage() {
                                                     // gap: "1px",
                                                 }}
                                             >
-                                                <div id="divToPrintOnSinglePage" className="border border-black p-3">
+                                                <div id="divToPrintOnSinglePage" className="">
                                                     <div className="flex justify-end mb-2 print:hidden">
                                                         <button
                                                             onClick={() => window.print()}
@@ -599,10 +616,15 @@ export default function VendorPage() {
                                                     </div>
                                                     <div className="overflow-x-auto w-full">
                                                         <table className="min-w-[700px] w-full border border-black border-collapse text-sm">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th className="border bg-gray-100 p-2 font-extrabold! text-nowrap text-center" colSpan={4}>Order Info</th>
+                                                                </tr>
+                                                            </thead>
                                                             <tbody>
                                                                 <tr>
                                                                     <td className="border p-2 font-semibold">Tracking ID</td>
-                                                                    <td className="border p-2">{a?.trackingId}</td>
+                                                                    <td className="border p-2 text-nowrap">{a?.trackingId}</td>
                                                                     <td className="border p-2 font-semibold">Order Date</td>
                                                                     <td className="border p-2">
                                                                         {a?.OrderDate?.split(' ').slice(1, 4).join(' ')}
@@ -615,42 +637,62 @@ export default function VendorPage() {
                                                                     <td className="border p-2">{a?.OrderAmount} Rs</td>
                                                                 </tr>
                                                                 <tr>
-                                                                    <td className="border p-2 font-semibold">Receiver Name</td>
-                                                                    <td className="border p-2">{a?.CustomerName}</td>
-                                                                    <td className="border p-2 font-semibold">Contact No</td>
-                                                                    <td className="border p-2">{a?.CustomerContactNo}</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td className="border p-2 font-semibold">Delivery City</td>
-                                                                    <td className="border p-2">{a?.DeliveryCity}</td>
-                                                                    <td className="border p-2 font-semibold">Pickup City</td>
-                                                                    <td className="border p-2">{a?.PickupCity}</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td className="border p-2 font-semibold">Delivery Address</td>
-                                                                    <td className="border p-2 max-w-[100px] text-wrap!" colSpan="3">
-                                                                        {a?.DeliveryAddress}
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td className="border p-2 font-semibold">Pickup Address</td>
-                                                                    <td className="border p-2 max-w-[100px] text-wrap!" colSpan="3">
-                                                                        {a?.PickupAddress}
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td className="border p-2 font-semibold">Dimensions</td>
-                                                                    <td className="border p-2">{a?.Dimensions}</td>
-                                                                    <td className="border p-2 font-semibold">Sender</td>
-                                                                    <td className="border p-2">
-                                                                        {localStorage.getItem('name') ? localStorage.getItem('name') : null}
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
                                                                     <td className="border p-2 font-semibold">Fragility</td>
                                                                     <td className="border p-2">{a?.fragility}</td>
                                                                     <td className="border p-2 font-semibold">Weight</td>
                                                                     <td className="border p-2">{a?.weight} Kg</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td className="border p-2 font-semibold text-nowrap">Payement Type</td>
+                                                                    <td className="border p-2">{a?.CodType}</td>
+                                                                    <td className="border p-2 font-semibold">Dimensions</td>
+                                                                    <td className="border p-2">{a?.Dimensions}</td>
+                                                                </tr>
+                                                            </tbody>
+                                                            <thead>
+                                                                <tr>
+                                                                    <th className="border bg-gray-100 p-2 font-extrabold! text-nowrap text-center" colSpan={4}>Receiver Info</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td className="border p-2 font-semibold">Receiver Name</td>
+                                                                    <td className="border p-2">{a?.CustomerName}</td>
+                                                                    <td className="border p-2 font-semibold text-nowrap">Receiver Contact No</td>
+                                                                    <td className="border p-2">{a?.CustomerContactNo}</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td className="border p-2 font-semibold">Receiver City</td>
+                                                                    <td className="border p-2">{a?.DeliveryCity}</td>
+                                                                    <td className="border p-2 font-semibold">Remarks Text</td>
+                                                                    <td className="border p-2 text-wrap! w-1/2!">{a?.RemarksText}</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td className="border p-2 font-semibold">Receiver Address</td>
+                                                                    <td className="border p-2 max-w-[100px] text-wrap!" colSpan="3">
+                                                                        {a?.DeliveryAddress}
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                            <thead>
+                                                                <tr>
+                                                                    <th className="border bg-gray-100 p-2 font-extrabold! text-nowrap text-center" colSpan={4}>Sender Info</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td className="border p-2 font-semibold">Sender Name</td>
+                                                                    <td className="border p-2">
+                                                                        {localStorage.getItem('name') ? localStorage.getItem('name') : null}
+                                                                    </td>
+                                                                    <td className="border p-2 font-semibold">Sender's City</td>
+                                                                    <td className="border p-2">{a?.PickupCity}</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td className="border p-2 font-semibold text-nowrap">Sender's Address</td>
+                                                                    <td className="border p-2 max-w-[100px] text-wrap!" colSpan="3">
+                                                                        {a?.PickupAddress}
+                                                                    </td>
                                                                 </tr>
                                                             </tbody>
                                                         </table>
@@ -659,7 +701,7 @@ export default function VendorPage() {
                                             </DialogTitle>
                                         </Dialog>
                                     </td>
-                                    <td className="py-[2%] text-center text-nowrap font-semibold! text-md" style={{ color: (a?.status === "order - placed") ? "red" : "green" }}>{a?.status}</td>
+                                    <td className="py-[2%] px-2 text-center text-nowrap font-semibold! text-md" style={{ color: (a?.status === "order - placed") ? "red" : "green" }}>{a?.status}</td>
                                     <td className="py-[2%] text-center text-nowrap font-semibold! text-md">
                                         <button
                                             disabled={a?.status !== "order - placed"}

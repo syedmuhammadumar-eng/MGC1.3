@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useCallback } from 'react';
 import { useEffect, useState } from 'react'
@@ -16,7 +17,7 @@ export default function AssignedOrders() {
             navigate('/');
             return [];
         }
-        const data = await fetch('http://localhost:3000/orders/assigned-to-rider-to-pickup-auth-rider', {
+        const data = await fetch(`${link}/orders/assigned-to-rider-to-pickup-auth-rider`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -37,7 +38,7 @@ export default function AssignedOrders() {
             throw new Error(`HTTP error! status: ${data.status}`);
         }
         const info = await data.json()
-        return info.order;
+        return info.order || [];
     }
     const { data: apiData, isLoading: ordersLoading, error: ordersError } = useQuery({
         queryKey: ['assignedOrdersToPick'],
@@ -127,11 +128,12 @@ export default function AssignedOrders() {
                                 <tr>
                                     <td className="p-4 text-center text-nowrap font-semibold">Sender Name </td>
                                     <td className="p-4 text-center text-nowrap font-semibold">Receiver Name </td>
-                                    {/* <td className="p-4 text-center text-nowrap font-semibold">Delivery Address </td> */}
+                                    <td className="p-4 text-center text-nowrap font-semibold">Tracking Id </td>
                                     <td className="p-4 text-center text-nowrap font-semibold">Receiver Contact No </td>
                                     <td className="p-4 text-center text-nowrap font-semibold">Pickup Address </td>
                                     <td className="p-4 text-center text-nowrap font-semibold">Dimensions </td>
                                     <td className="p-4 text-center text-nowrap font-semibold">Order Amount </td>
+                                    <td className="p-2 text-center text-nowrap font-semibold">Payement Type </td>
                                     {/* <td className="p-4 text-center text-nowrap font-semibold">Timer</td> */}
                                     <td className="p-4 text-center text-nowrap font-semibold">Status </td>
                                     <td className="p-4 text-center text-nowrap font-semibold">Fragility </td>
@@ -145,11 +147,12 @@ export default function AssignedOrders() {
                                         <tr>
                                             <td className="p-4 text-center text-nowrap">{b?.creatorName}</td>
                                             <td className="p-4 text-center text-nowrap">{b?.CustomerName}</td>
-                                            {/* <td className="p-4 text-center text-nowrap">{b?.DeliveryAddress}</td> */}
+                                            <td className="p-4 text-center text-nowrap">{b?.trackingId}</td>
                                             <td className="p-4 text-center text-nowrap">{b?.CustomerContactNo}</td>
                                             <td className="p-4 text-center text-nowrap">{b?.PickupAddress}</td>
                                             <td className="p-4 text-center text-nowrap">{b?.Dimensions}</td>
-                                            <td className="p-4 text-center text-nowrap">{b?.OrderAmount} Rs</td>
+                                            <td className="p-4 text-center text-nowrap">{b?.OrderAmount} {b?.OrderAmount ? "Rs" : " 0 Rs "}</td>
+                                            <td className="p-2 text-center text-nowrap">{b?.CodType}</td>
                                             {/* <td className="p-4 text-center text-nowrap text-red-600">
                                                 <b>{formatElapsedTime(timerFun(b?.RiderAssignedDate))}</b>
                                             </td> */}

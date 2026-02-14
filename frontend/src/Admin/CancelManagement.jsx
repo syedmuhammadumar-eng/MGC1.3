@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useState, useContext, useEffect } from 'react'
 import { Global } from "../global";
@@ -17,7 +18,7 @@ export default function CancelManagement() {
             navigate('/');
             return;
         }
-        const data = await fetch('http://localhost:3000/orders/orders-at-warehouse', {
+        const data = await fetch(`${link}/orders/orders-at-warehouse`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -60,7 +61,7 @@ export default function CancelManagement() {
             navigate('/');
             return;
         }
-        const data = await fetch('http://localhost:3000/riders/riders-active', {
+        const data = await fetch(`${link}/riders/riders-active`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -84,7 +85,7 @@ export default function CancelManagement() {
         return info;
     }
     const { data: rider, isLoading: riderLoading, error: riderError } = useQuery({
-        queryKey: ['riders'],
+        queryKey: ['riders-to-assign-for-cancel'],
         queryFn: getRiders,
         retry: 1,
         refetchOnWindowFocus: false
@@ -99,7 +100,7 @@ export default function CancelManagement() {
             navigate('/');
             return;
         }
-        const data = await fetch(`http://localhost:3000/orders/${orderId}`, {
+        const data = await fetch(`${link}/orders/${orderId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -109,6 +110,7 @@ export default function CancelManagement() {
                 ridersId: ridersId.toString(),
                 ridersIdForReturn: ridersId.toString(),
                 status: "Rider Assigned - To Return To Vendor",
+                RiderReturnDate: new Date().toString().split(' ').splice(0, 5).join(' ')
             })
         })
         if (data?.status === 401) {
@@ -154,7 +156,7 @@ export default function CancelManagement() {
             navigate('/');
             return;
         }
-        const data = await fetch(`http://localhost:3000/orders/${orderId}`, {
+        const data = await fetch(`${link}/orders/${orderId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',

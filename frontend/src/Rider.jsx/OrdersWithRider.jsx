@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
@@ -15,7 +16,7 @@ export default function OrdersWithRider() {
             return;
         }
 
-        const data = await fetch('http://localhost:3000/orders/orders-with-rider', {
+        const data = await fetch(`${link}/orders/orders-with-rider`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -94,7 +95,8 @@ export default function OrdersWithRider() {
                                 <td className="p-4 text-center text-nowrap font-semibold">Tracking Id </td>
                                 <td className="p-4 text-center text-nowrap font-semibold">Order Date </td>
                                 <td className="p-4 text-center text-nowrap font-semibold">Delivered Date </td>
-                                {/* <td className="p-4 text-center text-nowrap font-semibold">Customer Contact No </td> */}
+                                <td className="p-4 text-center text-nowrap font-semibold">Order Amount </td>
+                                <td className="p-2 text-center text-nowrap font-semibold">Payement Type </td>
                                 {/* <td className="p-4 text-center text-nowrap font-semibold">Delivery Address </td> */}
                                 <td className="p-4 text-center text-nowrap font-semibold">Dimensions </td>
                                 <td className="p-4 text-center text-nowrap font-semibold">Status </td>
@@ -109,6 +111,8 @@ export default function OrdersWithRider() {
                                         <td className="p-4 text-center text-nowrap">{a?.trackingId}</td>
                                         <td className="p-4 text-center text-nowrap">{a?.OrderDate}</td>
                                         <td className="p-4 text-center text-nowrap">{a?.RiderDeliveredDate}</td>
+                                        <td className="p-4 text-center text-nowrap">{a?.OrderAmount}  {a?.OrderAmount ? "Rs" : " 0 Rs "}</td>
+                                        <td className="p-2 text-center text-nowrap">{a?.CodType}</td>
                                         {/* <td className="p-4 text-center text-nowrap">{a?.CustomerContactNo}</td> */}
                                         {/* <td className="p-4 text-center text-nowrap">{a?.DeliveryAddress}</td> */}
                                         <td className="p-4 text-center text-nowrap">{a?.Dimensions}</td>

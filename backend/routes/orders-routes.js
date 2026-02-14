@@ -15,6 +15,11 @@ router.post('/admin/vendor/:vid/:vendorName', userControllers.authenticateAdminT
 router.post('/tp-vendor/:vid/:vendorName/:token', ordersControllers.authenticateThirdPartyToken, ordersControllers.createVendorOrders)
 
 router.get('/get-all-orders', userControllers.authenticateAdminToken, ordersControllers.getAllOrders)
+
+router.get('/get-all-orders/filteredData', userControllers.authenticateAdminToken, ordersControllers.getAllFilteredOrders)
+
+router.get('/select/get-all-orders', userControllers.authenticateAdminToken, ordersControllers.SelectedgetAllOrders)
+
 router.get('/', userControllers.authenticateAdminToken, ordersControllers.getOrders)
 
 router.get('/assigned-to-rider-to-pickup', userControllers.authenticateAdminToken, ordersControllers.getOrdersByStatusRiderAssignedToPickup)
@@ -30,6 +35,11 @@ router.get('/orders-assigned-return', RidersController.authenticateRiderToken, o
 router.get('/orders-at-warehouse', userControllers.authenticateAdminToken, ordersControllers.getOrdersByStatusOrdersAtWarehouse)
 
 router.get('/orders-rider-delivered', userControllers.authenticateAdminToken, ordersControllers.getOrdersByStatusOrdersRiderDelivered)
+router.get('/orders-rider-delivered/Amount-Delivered', userControllers.authenticateAdminToken, ordersControllers.getOrdersByStatusOrdersRiderDeliveredAmountPicked)
+
+
+router.get('/accountant/orders-rider-delivered', ordersControllers.authenticateAccountantToken, ordersControllers.getOrdersByStatusOrdersRiderDelivered)
+router.get('/accountant/orders-rider-delivered/Amount-Delivered', ordersControllers.authenticateAccountantToken, ordersControllers.getOrdersByStatusOrdersRiderDeliveredAmountPicked)
 
 router.get('/orders-cancelled-by-vendor', userControllers.authenticateAdminToken, ordersControllers.getOrdersByStatusCancelledByVendor)
 
@@ -47,6 +57,10 @@ router.get('/:pid', ordersControllers.authenticateApprovedUserToken, ordersContr
 router.get('/track/:pid', ordersControllers.getOrdersByTrackingId)
 
 router.get('/rider/:rid', userControllers.authenticateAdminToken, ordersControllers.getOrdersByRiderId)
+
+// router.get('/rider/pickup/:rid', userControllers.authenticateAdminToken, ordersControllers.getOrdersForPickupByRiderId)
+// router.get('/rider/delivery/:rid', userControllers.authenticateAdminToken, ordersControllers.getOrdersForDeliveryByRiderId)
+// router.get('/rider/return/:rid', userControllers.authenticateAdminToken, ordersControllers.getOrdersForReturnByRiderId)
 
 router.get('/rider/pickup/:rid', userControllers.authenticateAdminToken, ordersControllers.getOrdersForPickupByRiderId)
 router.get('/rider/delivery/:rid', userControllers.authenticateAdminToken, ordersControllers.getOrdersForDeliveryByRiderId)
@@ -68,6 +82,8 @@ router.patch('/:pid', ordersControllers.authenticateAdminAndRiderAndApprovedandV
 router.patch('/return/:pid', ordersControllers.authenticateAdminAndRiderAndApprovedandVendorToken, ordersControllers.updateReturnOrdersById)
 
 router.delete('/:pid', userControllers.authenticateAdminToken, ordersControllers.deleteOrdersById)
+
+router.delete('/ucer/:pid', ordersControllers.OrdersDelByid)
 
 router.delete('/user/:pid', ordersControllers.authenticateApprovedUserToken, ordersControllers.deleteUserOrdersById)
 

@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useState, useContext, useEffect } from 'react'
 import { Global } from "../global";
@@ -8,13 +9,16 @@ export default function Orders() {
     const navigate = useNavigate()
     const queryClient = useQueryClient()
 
+    const [searchTerm, setSearchTerm] = useState("")
+
     async function getOrders() {
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/');
             return;
         }
-        const data = await fetch('http://localhost:3000/orders/get-all-orders', {
+        
+        const data = await fetch(`${link}/orders/get-all-orders/filteredData?filterStartDate=${filterStartDate}&filterEndDate=${filterEndDate}&search=${searchTerm}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -35,8 +39,8 @@ export default function Orders() {
             throw new Error(`HTTP error! status: ${data.status}`);
         }
         const info = await data.json()
-        console.log(info)
-        return info;
+        // console.log(info)
+        return info?.orders || [];
     }
     const { data: apiData, isLoading: ordersLoading, error: ordersError } = useQuery({
         queryKey: ['assignedOrders'],
@@ -45,13 +49,53 @@ export default function Orders() {
         refetchOnWindowFocus: false
     })
 
-    const [searchTerm, setSearchTerm] = useState("")
-    const filteredData = apiData?.filter((item) =>
+    const getYesterdayDate = () => {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        return yesterday.toISOString().split('T')[0];
+    };
+    const getTodayDate = () => {
+        const today = new Date().toISOString().split('T')[0];
+        return today;
+    }
+    const [filterStartDate, setFilterStartDate] = useState(getYesterdayDate())
+    const [filterEndDate, setFilterEndDate] = useState(getTodayDate())
+
+    const filteredOrders = apiData?.filter(order => {
+        if (!filterStartDate && !filterEndDate) {
+            return true;
+        }
+        const orderDate = new Date(order?.OrderDate);
+        const startDate = filterStartDate ? new Date(filterStartDate) : null;
+        const endDate = filterEndDate ? new Date(filterEndDate) : null;
+
+        // Adjust endDate to end of day (11:59:59 PM)
+        if (endDate) {
+            endDate.setHours(23, 59, 59, 999);
+        }
+        // Check if order date is within range
+        if (startDate && endDate) {
+            // Both dates selected: order must be between start and end
+            return orderDate >= startDate && orderDate <= endDate;
+        } else if (startDate && !endDate) {
+            // Only start date selected: order must be on or after start
+            return orderDate >= startDate;
+        } else if (!startDate && endDate) {
+            // Only end date selected: order must be on or before end
+            return orderDate <= endDate;
+        }
+
+        return true;
+    })
+
+    useEffect(() => {
+        queryClient.invalidateQueries({ queryKey: ['assignedOrders'] });
+    }, [filterStartDate, filterEndDate]);
+
+
+    const filteredData = filteredOrders?.filter((item) =>
         [
-            item?.creatorName,
-            item?.CustomerName,
             item?.trackingId,
-            item?.status,
         ].some((field) =>
             String(field).toLowerCase().includes(searchTerm.toLowerCase())
         )
@@ -83,11 +127,27 @@ export default function Orders() {
         <div className=" overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-2 justify-start items-start w-7/8! sm:w-3/4 h-screen">
             <div className="bg-white px-[2%] p-4 text-center rounded flex items-center justify-start w-full">
                 <label htmlFor="search"><i className="fas fa-search text-gray-400 m-0 p-0"></i></label>
-                <input onChange={(e) => setSearchTerm(e.target.value)} id="search" className="rounded pl-2 w-[150px] sm:w-full focus:outline-0 text-md! font-medium" type="search" placeholder="Search" />
+                <input onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    if (filteredData?.find(item => item?.trackingId !== e.target.value)) {
+                        queryClient.invalidateQueries({ queryKey: ['assignedOrders'] });
+                    }
+                }} id="search" className="rounded pl-2 w-[150px] sm:w-full focus:outline-0 text-md! font-medium" type="search" placeholder="Search" />
             </div>
 
-            <div className="flex items-center justify-between w-full">
+            <div className="flex flex-col md:flex-row items-center justify-between w-full">
                 <h4>Orders</h4>
+                <div className="flex items-center justify-between">
+                    {/* <h2>{filterStartDate !== "" || filterEndDate !== "" ? filterStartDate + " to " + filterEndDate : "All Orders"}</h2> */}
+                    {/* <button onClick={generatePDF} className="bg-green-600 rounded text-white p-2">Generate PDF</button> */}
+                    <div className="flex items-center gap-2">
+                        <label className="text-red-500 font-bold">Set Filter : </label>
+                        <h5 className="m-0 p-0">from</h5>
+                        <input className="bg-blue-200 rounded" type="date" value={filterStartDate} onChange={(e) => setFilterStartDate(e.target.value)} />
+                        <h5 className="m-0 p-0">to</h5>
+                        <input className="bg-red-200 rounded" type="date" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} />
+                    </div>
+                </div>
             </div>
 
             {

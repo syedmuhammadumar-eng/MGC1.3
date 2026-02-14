@@ -1,0 +1,1440 @@
+import { link } from '../backendLink.js';
+import logo from '../assets/MGC.png';
+import { useCallback, useEffect, useRef } from "react";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom"
+import { jsPDF } from 'jspdf';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
+
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+export default function RidersDetails() {
+    const { rid } = useParams()
+    // const [ridersData, setRidersData] = useState()
+
+
+    // -------------- states for pages -------------------------------
+    const [page, setPage] = useState(0)
+
+
+    const queryClient = useQueryClient()
+
+    const [openMenuAddUser, setOpenMenuAddUser] = useState(false)
+
+    const navigate = useNavigate()
+
+
+
+    // ------------------------------Getting Riders Data -------------------------------
+    async function ridersLogic() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/');
+            return;
+        }
+
+        const data = await fetch(`${link}/riders/${rid}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+        })
+        if (data?.status === 401) {
+            localStorage.removeItem('token');
+            navigate('/');
+            return;
+        }
+        if (data?.status === 403) {
+            // Not authorized (not admin)
+            navigate('/');
+            return;
+        }
+        if (!data?.ok) {
+            throw new Error(`HTTP error! status: ${data.status}`);
+        }
+        const info = await data.json()
+        return [info?.riders]
+        // console.log(info)
+    }
+    const { data: ridersData, isLoading: dataLoading, error: dataError, isFetching } = useQuery({
+        queryKey: ['ridersDetail'],
+        queryFn: ridersLogic,
+        retry: 1,
+        refetchOnWindowFocus: false,
+    })
+
+
+
+    // --------------------------------Getting Orders--------------------------------
+    // const data = await fetch(`${link}/orders/rider/${rid}`, {
+
+    // const [deliveryOrdersData, setDeliveryOrdersData] = useState()
+    async function deliveryOrdersDataLogic() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/');
+            return;
+        }
+        const data = await fetch(`${link}/orders/rider/delivery/${rid}?filterStartDate=${filterStartDateDelivery}&filterEndDate=${filterEndDateDelivery}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+        })
+        if (data?.status === 401) {
+            localStorage.removeItem('token');
+            navigate('/');
+            return;
+        }
+        if (data?.status === 403) {
+            // Not authorized (not admin)
+            navigate('/');
+            return;
+        }
+        if (!data?.ok) {
+            throw new Error(`HTTP error! status: ${data.status}`);
+        }
+        const info = await data.json()
+        // console.log(info)
+        return info?.orders;
+    }
+    const { data: deliveryOrdersData, isLoading: ordersLoading, error: ordersError } = useQuery({
+        queryKey: ['ordersdata-delivery'],
+        queryFn: deliveryOrdersDataLogic,
+        retry: 1,
+        refetchOnWindowFocus: true,
+    })
+
+
+    // const [pickupOrdersData, setPickupOrdersData] = useState()
+    async function callPickupData() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/');
+            return;
+        }
+        const data = await fetch(`${link}/orders/rider/pickup/${rid}?filterStartDate=${filterStartDatePickup}&filterEndDate=${filterEndDatePickup}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+        })
+        if (data?.status === 401) {
+            localStorage.removeItem('token');
+            navigate('/');
+            return;
+        }
+        if (data?.status === 403) {
+            // Not authorized (not admin)
+            navigate('/');
+            return;
+        }
+        if (!data?.ok) {
+            throw new Error(`HTTP error! status: ${data.status}`);
+        }
+        const info = await data.json()
+        // console.log(info)
+        return info?.orders;
+    }
+    const { data: pickupOrdersData, isLoading: pickupLoading } = useQuery({
+        queryKey: ['pickupOrdersData'],
+        queryFn: () => callPickupData(),
+        enabled: page === 1,
+        retry: 1,
+        refetchOnWindowFocus: true,
+    });
+
+
+    // const [returnOrdersData, setReturnOrdersData] = useState()
+    async function callReturnData() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/');
+            return;
+        }
+        const data = await fetch(`${link}/orders/rider/return/${rid}?filterStartDate=${filterStartDateReturn}&filterEndDate=${filterEndDateReturn}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+        })
+        if (data?.status === 401) {
+            localStorage.removeItem('token');
+            navigate('/');
+            return;
+        }
+        if (data?.status === 403) {
+            // Not authorized (not admin)
+            navigate('/');
+            return;
+        }
+        if (!data?.ok) {
+            throw new Error(`HTTP error! status: ${data.status}`);
+        }
+        const info = await data.json()
+        // console.log(info)
+        return info?.orders;
+    }
+    const { data: returnOrdersData, isLoading: returnLoading } = useQuery({
+        queryKey: ['returnOrdersData'],
+        queryFn: () => callReturnData(),
+        enabled: page === 2,
+        retry: 1,
+        refetchOnWindowFocus: true,
+    });
+
+
+
+
+    // ------------------Filtering---------------------------------------
+    const getYesterdayDate = () => {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        return yesterday.toISOString().split('T')[0];
+    };
+    const getTodayDate = () => {
+        const today = new Date().toISOString().split('T')[0];
+        return today;
+    }
+    const [filterStartDateDelivery, setFilterStartDateDelivery] = useState(getYesterdayDate())
+    const [filterEndDateDelivery, setFilterEndDateDelivery] = useState(getTodayDate())
+
+    const [filterStartDatePickup, setFilterStartDatePickup] = useState(getYesterdayDate())
+    const [filterEndDatePickup, setFilterEndDatePickup] = useState(getTodayDate())
+
+    const [filterStartDateReturn, setFilterStartDateReturn] = useState(getYesterdayDate())
+    const [filterEndDateReturn, setFilterEndDateReturn] = useState(getTodayDate())
+
+
+    // const filteredOrdersDelivery = deliveryOrdersData?.filter(order => {
+    //     if (!filterStartDateDelivery && !filterEndDateDelivery) {
+    //         return true;
+    //     }
+    //     const orderDateDelivery = new Date(order?.RiderDeliveredDate);
+    //     const startDateDelivery = filterStartDateDelivery ? new Date(filterStartDateDelivery) : null;
+    //     const endDateDelivery = filterEndDateDelivery ? new Date(filterEndDateDelivery) : null;
+
+    //     // Adjust endDate to end of day (11:59:59 PM)
+    //     if (endDateDelivery) {
+    //         endDateDelivery.setHours(23, 59, 59, 999);
+    //     }
+    //     // Check if order date is within range
+    //     if (startDateDelivery && endDateDelivery) {
+    //         // Both dates selected: order must be between start and end
+    //         return orderDateDelivery >= startDateDelivery && orderDateDelivery <= endDateDelivery;
+    //     } else if (startDateDelivery && !endDateDelivery) {
+    //         // Only start date selected: order must be on or after start
+    //         return orderDateDelivery >= startDateDelivery;
+    //     } else if (!startDateDelivery && endDateDelivery) {
+    //         // Only end date selected: order must be on or before end
+    //         return orderDateDelivery <= endDateDelivery;
+    //     }
+    //     return true;
+    // })
+
+    
+    // const filteredOrdersPickup = pickupOrdersData?.filter(order => {
+    //     if (!filterStartDatePickup && !filterEndDatePickup) {
+    //         return true;
+    //     }
+    //     const orderDatePickup = new Date(order?.RiderAssignedDate);
+    //     const startDatePickup = filterStartDatePickup ? new Date(filterStartDatePickup) : null;
+    //     const endDatePickup = filterEndDatePickup ? new Date(filterEndDatePickup) : null;
+
+    //     // Adjust endDate to end of day (11:59:59 PM)
+    //     if (endDatePickup) {
+    //         endDatePickup.setHours(23, 59, 59, 999);
+    //     }
+    //     // Check if order date is within range
+    //     if (startDatePickup && endDatePickup) {
+    //         // Both dates selected: order must be between start and end
+    //         return orderDatePickup >= startDatePickup && orderDatePickup <= endDatePickup;
+    //     } else if (startDatePickup && !endDatePickup) {
+    //         // Only start date selected: order must be on or after start
+    //         return orderDatePickup >= startDatePickup;
+    //     } else if (!startDatePickup && endDatePickup) {
+    //         // Only end date selected: order must be on or before end
+    //         return orderDatePickup <= endDatePickup;
+    //     }
+    //     return true;
+    // })
+
+    
+    // const filteredOrdersReturn = returnOrdersData?.filter(order => {
+    //     if (!filterStartDateReturn && !filterEndDateReturn) {
+    //         return true;
+    //     }
+    //     const orderDateReturn = new Date(order?.RiderReturnDate);
+    //     const startDateReturn = filterStartDateReturn ? new Date(filterStartDateReturn) : null;
+    //     const endDateReturn = filterEndDateReturn ? new Date(filterEndDateReturn) : null;
+
+    //     // Adjust endDate to end of day (11:59:59 PM)
+    //     if (endDateReturn) {
+    //         endDateReturn.setHours(23, 59, 59, 999);
+    //     }
+    //     // Check if order date is within range
+    //     if (startDateReturn && endDateReturn) {
+    //         // Both dates selected: order must be between start and end
+    //         return orderDateReturn >= startDateReturn && orderDateReturn <= endDateReturn;
+    //     } else if (startDateReturn && !endDateReturn) {
+    //         // Only start date selected: order must be on or after start
+    //         return orderDateReturn >= startDateReturn;
+    //     } else if (!startDateReturn && endDateReturn) {
+    //         // Only end date selected: order must be on or before end
+    //         return orderDateReturn <= endDateReturn;
+    //     }
+    //     return true;
+    // })
+
+
+
+    const loadImage = (url) =>
+        new Promise((resolve) => {
+            const img = new Image();
+            img.src = url;
+            img.onload = () => resolve(img);
+        });
+
+    // ---------------PDF Generation----------------------------------------
+    const generatePDFDelivery = async () => {
+        try {
+            // Create new PDF
+            const pdf = new jsPDF('p', 'mm', 'a4');
+
+            // Set margins
+            const margin = 5;
+            const pageWidth = 250;
+            const pageHeight = 297;
+            const contentWidth = 190;
+            let yPosition = margin;
+
+            // Add rider info
+            const rider = ridersData?.[0];
+
+            // Title
+            yPosition += 10;
+
+            const img = await loadImage(logo);
+
+            // Sizes
+            const headingFontSize = 20;
+            const logoHeight = 25;
+            const logoWidth = 70;
+            pdf.setFontSize(headingFontSize);
+            const text = 'Rider\'s Delivery Report';
+            const textWidth = pdf.getTextWidth(text);
+            const gap = 3;
+            const totalWidth = logoWidth + gap + textWidth;
+            const startX = ((pdf.internal.pageSize.getWidth() - totalWidth) / 2) - 40;
+            pdf.addImage(
+                img,
+                'PNG',
+                startX,
+                yPosition - logoHeight + 15, // vertical alignment tweak
+                logoWidth,
+                logoHeight
+            );
+            pdf.text(
+                text,
+                (pageWidth / 2),
+                yPosition
+                , { align: 'center' }
+            );
+            yPosition += 10;
+
+            pdf.setFontSize(12);
+            pdf.text(`Generated: ${new Date().toLocaleDateString()}`, (pageWidth / 2), yPosition, { align: 'center' });
+            yPosition += 15;
+
+            // Rider Info Table - NO WRAPPING
+            pdf.setFontSize(14);
+            pdf.text('Rider Information', margin, yPosition);
+            yPosition += 10;
+
+            pdf.setFontSize(10);
+            const riderDataRows = [
+                ['Rider Name:', rider?.ridersName || 'N/A'],
+                ['CNIC:', rider?.cnic || 'N/A'],
+                ['Contact No:', rider?.contactNo || 'N/A'],
+                ['Vehicle:', rider?.vehicle || 'N/A'],
+                ['Assigned Area:', rider?.assignedArea || 'N/A']
+            ];
+
+            riderDataRows.forEach(([label, value]) => {
+                if (yPosition > pageHeight - margin) {
+                    pdf.addPage();
+                    yPosition = margin;
+                }
+                pdf.text(`${label} ${value}`, margin, yPosition); // Simple text, no wrapping
+                yPosition += 7;
+            });
+
+            yPosition += 10;
+
+            // Orders Table - NO WRAPPING
+            if (deliveryOrdersData && deliveryOrdersData.length > 0) {
+                pdf.setFontSize(14);
+                pdf.text('Orders Summary', margin, yPosition);
+                yPosition += 10;
+
+                pdf.setFontSize(8); // Smaller font for table
+
+                // Table headers
+                const headers = ['sender', 'Receiver', 'Order Date', 'Amount', 'Status'];
+                let xPosition = margin;
+                const colWidth = contentWidth / headers.length; // Equal column width
+
+                // Draw headers
+                headers.forEach(header => {
+                    pdf.text(header, xPosition, yPosition);
+                    xPosition += colWidth;
+                });
+
+                yPosition += 7;
+
+                // Draw line under headers
+                pdf.line(margin, yPosition - 3, pageWidth - margin, yPosition - 3);
+
+                yPosition += 3;
+
+                // Add orders with automatic pagination
+                deliveryOrdersData.forEach((order, index) => {
+                    // Check if we need new page
+                    if (yPosition > pageHeight - margin) {
+                        pdf.addPage();
+                        yPosition = margin;
+                    }
+
+                    // Row data - NO WRAPPING
+                    const row = [
+                        order?.creatorName || 'N/A',
+                        order?.CustomerName || 'N/A',
+                        // order?.DeliveryAddress || 'N/A',
+                        order?.OrderDate ? new Date(order.OrderDate).toLocaleDateString() : 'N/A',
+                        order?.OrderAmount + ' ' + 'Rs' || '0',
+                        order?.status || 'N/A'
+                    ];
+
+                    // Draw row cells - text will overflow if too long
+                    xPosition = margin;
+                    row.forEach(cell => {
+                        pdf.text(cell.toString(), xPosition, yPosition);
+                        xPosition += colWidth;
+                    });
+
+                    yPosition += 6;
+                });
+
+                // Add Tracking IDs section - NO WRAPPING
+                yPosition += 10;
+
+                if (yPosition > pageHeight - margin - 30) {
+                    pdf.addPage();
+                    yPosition = margin;
+                }
+
+                pdf.setFontSize(14);
+                pdf.text('Tracking IDs', margin, yPosition);
+                yPosition += 10;
+
+                pdf.setFontSize(9);
+
+                // List all tracking IDs - NO WRAPPING
+                deliveryOrdersData.forEach((order, index) => {
+                    if (yPosition > pageHeight - margin) {
+                        pdf.addPage();
+                        yPosition = margin;
+                    }
+
+                    pdf.text(`${index + 1}. ${order?.trackingId || 'N/A'}`, margin, yPosition);
+                    yPosition += 6;
+                });
+
+                // Add total
+                yPosition += 10;
+                const totalAmount = deliveryOrdersData.reduce((sum, order) => sum + (parseFloat(order?.OrderAmount) || 0), 0);
+                pdf.setFontSize(10);
+                pdf.text(`Total Amount: ${totalAmount.toFixed(2)}`, margin, yPosition);
+                pdf.text(`Total Orders: ${deliveryOrdersData.length}`, pageWidth - margin - 60, yPosition, { align: 'right' });
+            } else {
+                // No orders message
+                pdf.setFontSize(12);
+                pdf.text('No orders found for the selected date range.', margin, yPosition);
+            }
+
+            // Save PDF
+            pdf.save(`Rider_Delivery_Report_${rider?.ridersName || 'Unknown'}_${new Date().getTime()}.pdf`);
+
+        } catch (error) {
+            console.error('PDF generation error:', error);
+            alert('Error generating PDF. Please try again.');
+        }
+    };
+    const generatePDFPickup = async () => {
+        try {
+            // Create new PDF
+            const pdf = new jsPDF('p', 'mm', 'a4');
+
+            // Set margins
+            const margin = 5;
+            const pageWidth = 250;
+            const pageHeight = 297;
+            const contentWidth = 190;
+            let yPosition = margin;
+
+            // Add rider info
+            const rider = ridersData?.[0];
+
+            // Title
+            yPosition += 10;
+
+            const img = await loadImage(logo);
+
+            // Sizes
+            const headingFontSize = 20;
+            const logoHeight = 25;
+            const logoWidth = 70;
+            pdf.setFontSize(headingFontSize);
+            const text = 'Rider\'s Pickup Report';
+            const textWidth = pdf.getTextWidth(text);
+            const gap = 3;
+            const totalWidth = logoWidth + gap + textWidth;
+            const startX = ((pdf.internal.pageSize.getWidth() - totalWidth) / 2) - 40;
+            pdf.addImage(
+                img,
+                'PNG',
+                startX,
+                yPosition - logoHeight + 15, // vertical alignment tweak
+                logoWidth,
+                logoHeight
+            );
+            pdf.text(
+                text,
+                (pageWidth / 2),
+                yPosition
+                , { align: 'center' }
+            );
+            yPosition += 10;
+
+            pdf.setFontSize(12);
+            pdf.text(`Generated: ${new Date().toLocaleDateString()}`, (pageWidth / 2), yPosition, { align: 'center' });
+            yPosition += 15;
+
+            // Rider Info Table - NO WRAPPING
+            pdf.setFontSize(14);
+            pdf.text('Rider Pickup Information', margin, yPosition);
+            yPosition += 10;
+
+            pdf.setFontSize(10);
+            const riderDataRows = [
+                ['Rider Name:', rider?.ridersName || 'N/A'],
+                ['CNIC:', rider?.cnic || 'N/A'],
+                ['Contact No:', rider?.contactNo || 'N/A'],
+                ['Vehicle:', rider?.vehicle || 'N/A'],
+                ['Assigned Area:', rider?.assignedArea || 'N/A']
+            ];
+
+            riderDataRows.forEach(([label, value]) => {
+                if (yPosition > pageHeight - margin) {
+                    pdf.addPage();
+                    yPosition = margin;
+                }
+                pdf.text(`${label} ${value}`, margin, yPosition); // Simple text, no wrapping
+                yPosition += 7;
+            });
+
+            yPosition += 10;
+
+            // Orders Table - NO WRAPPING
+            if (pickupOrdersData && pickupOrdersData.length > 0) {
+                pdf.setFontSize(14);
+                pdf.text('Orders Summary', margin, yPosition);
+                yPosition += 10;
+
+                pdf.setFontSize(8); // Smaller font for table
+
+                // Table headers
+                const headers = ['sender', 'Receiver', 'Order Date', 'Amount', 'Status'];
+                let xPosition = margin;
+                const colWidth = contentWidth / headers.length; // Equal column width
+
+                // Draw headers
+                headers.forEach(header => {
+                    pdf.text(header, xPosition, yPosition);
+                    xPosition += colWidth;
+                });
+
+                yPosition += 7;
+
+                // Draw line under headers
+                pdf.line(margin, yPosition - 3, pageWidth - margin, yPosition - 3);
+
+                yPosition += 3;
+
+                // Add orders with automatic pagination
+                pickupOrdersData.forEach((order, index) => {
+                    // Check if we need new page
+                    if (yPosition > pageHeight - margin) {
+                        pdf.addPage();
+                        yPosition = margin;
+                    }
+
+                    // Row data - NO WRAPPING
+                    const row = [
+                        order?.creatorName || 'N/A',
+                        order?.CustomerName || 'N/A',
+                        // order?.DeliveryAddress || 'N/A',
+                        order?.OrderDate ? new Date(order.OrderDate).toLocaleDateString() : 'N/A',
+                        order?.OrderAmount || '0',
+                        order?.status || 'N/A'
+                    ];
+
+                    // Draw row cells - text will overflow if too long
+                    xPosition = margin;
+                    row.forEach(cell => {
+                        pdf.text(cell.toString(), xPosition, yPosition);
+                        xPosition += colWidth;
+                    });
+
+                    yPosition += 6;
+                });
+
+                // Add Tracking IDs section - NO WRAPPING
+                yPosition += 10;
+
+                if (yPosition > pageHeight - margin - 30) {
+                    pdf.addPage();
+                    yPosition = margin;
+                }
+
+                pdf.setFontSize(14);
+                pdf.text('Tracking IDs', margin, yPosition);
+                yPosition += 10;
+
+                pdf.setFontSize(9);
+
+                // List all tracking IDs - NO WRAPPING
+                pickupOrdersData.forEach((order, index) => {
+                    if (yPosition > pageHeight - margin) {
+                        pdf.addPage();
+                        yPosition = margin;
+                    }
+
+                    pdf.text(`${index + 1}. ${order?.trackingId || 'N/A'}`, margin, yPosition);
+                    yPosition += 6;
+                });
+
+                // Add total
+                yPosition += 10;
+                const totalAmount = pickupOrdersData.reduce((sum, order) => sum + (parseFloat(order?.OrderAmount) || 0), 0);
+                pdf.setFontSize(10);
+                pdf.text(`Total Amount: ${totalAmount.toFixed(2)}`, margin, yPosition);
+                pdf.text(`Total Orders: ${pickupOrdersData.length}`, pageWidth - margin - 60, yPosition, { align: 'right' });
+            } else {
+                // No orders message
+                pdf.setFontSize(12);
+                pdf.text('No orders found for the selected date range.', margin, yPosition);
+            }
+
+            // Save PDF
+            pdf.save(`Rider_Pickup_Report_${rider?.ridersName || 'Unknown'}_${new Date().getTime()}.pdf`);
+
+        } catch (error) {
+            console.error('PDF generation error:', error);
+            alert('Error generating PDF. Please try again.');
+        }
+    };
+    const generatePDFReturn = async () => {
+        try {
+            // Create new PDF
+            const pdf = new jsPDF('p', 'mm', 'a4');
+
+            // Set margins
+            const margin = 5;
+            const pageWidth = 250;
+            const pageHeight = 297;
+            const contentWidth = 190;
+            let yPosition = margin;
+
+            // Add rider info
+            const rider = ridersData?.[0];
+
+            // Title
+            yPosition += 10;
+
+            const img = await loadImage(logo);
+
+            // Sizes
+            const headingFontSize = 20;
+            const logoHeight = 25;
+            const logoWidth = 70;
+            pdf.setFontSize(headingFontSize);
+            const text = 'Rider\'s Return Report';
+            const textWidth = pdf.getTextWidth(text);
+            const gap = 3;
+            const totalWidth = logoWidth + gap + textWidth;
+            const startX = ((pdf.internal.pageSize.getWidth() - totalWidth) / 2) - 40;
+            pdf.addImage(
+                img,
+                'PNG',
+                startX,
+                yPosition - logoHeight + 15, // vertical alignment tweak
+                logoWidth,
+                logoHeight
+            );
+            pdf.text(
+                text,
+                (pageWidth / 2),
+                yPosition
+                , { align: 'center' }
+            );
+            yPosition += 10;
+
+            pdf.setFontSize(12);
+            pdf.text(`Generated: ${new Date().toLocaleDateString()}`, (pageWidth / 2), yPosition, { align: 'center' });
+            yPosition += 15;
+
+            // Rider Info Table - NO WRAPPING
+            pdf.setFontSize(14);
+            pdf.text('Rider Return Information', margin, yPosition);
+            yPosition += 10;
+
+            pdf.setFontSize(10);
+            const riderDataRows = [
+                ['Rider Name:', rider?.ridersName || 'N/A'],
+                ['CNIC:', rider?.cnic || 'N/A'],
+                ['Contact No:', rider?.contactNo || 'N/A'],
+                ['Vehicle:', rider?.vehicle || 'N/A'],
+                ['Assigned Area:', rider?.assignedArea || 'N/A']
+            ];
+
+            riderDataRows.forEach(([label, value]) => {
+                if (yPosition > pageHeight - margin) {
+                    pdf.addPage();
+                    yPosition = margin;
+                }
+                pdf.text(`${label} ${value}`, margin, yPosition); // Simple text, no wrapping
+                yPosition += 7;
+            });
+
+            yPosition += 10;
+
+            // Orders Table - NO WRAPPING
+            if (returnOrdersData && returnOrdersData.length > 0) {
+                pdf.setFontSize(14);
+                pdf.text('Orders Summary', margin, yPosition);
+                yPosition += 10;
+
+                pdf.setFontSize(8); // Smaller font for table
+
+                // Table headers
+                const headers = ['sender', 'Receiver', 'Order Date', 'Amount', 'Status'];
+                let xPosition = margin;
+                const colWidth = contentWidth / headers.length; // Equal column width
+
+                // Draw headers
+                headers.forEach(header => {
+                    pdf.text(header, xPosition, yPosition);
+                    xPosition += colWidth;
+                });
+
+                yPosition += 7;
+
+                // Draw line under headers
+                pdf.line(margin, yPosition - 3, pageWidth - margin, yPosition - 3);
+
+                yPosition += 3;
+
+                // Add orders with automatic pagination
+                returnOrdersData.forEach((order, index) => {
+                    // Check if we need new page
+                    if (yPosition > pageHeight - margin) {
+                        pdf.addPage();
+                        yPosition = margin;
+                    }
+
+                    // Row data - NO WRAPPING
+                    const row = [
+                        order?.creatorName || 'N/A',
+                        order?.CustomerName || 'N/A',
+                        // order?.DeliveryAddress || 'N/A',
+                        order?.OrderDate ? new Date(order.OrderDate).toLocaleDateString() : 'N/A',
+                        order?.OrderAmount + ' ' + 'Rs' || '0',
+                        order?.status || 'N/A'
+                    ];
+
+                    // Draw row cells - text will overflow if too long
+                    xPosition = margin;
+                    row.forEach(cell => {
+                        pdf.text(cell.toString(), xPosition, yPosition);
+                        xPosition += colWidth;
+                    });
+
+                    yPosition += 6;
+                });
+
+                // Add Tracking IDs section - NO WRAPPING
+                yPosition += 10;
+
+                if (yPosition > pageHeight - margin - 30) {
+                    pdf.addPage();
+                    yPosition = margin;
+                }
+
+                pdf.setFontSize(14);
+                pdf.text('Tracking IDs', margin, yPosition);
+                yPosition += 10;
+
+                pdf.setFontSize(9);
+
+                // List all tracking IDs - NO WRAPPING
+                returnOrdersData.forEach((order, index) => {
+                    if (yPosition > pageHeight - margin) {
+                        pdf.addPage();
+                        yPosition = margin;
+                    }
+
+                    pdf.text(`${index + 1}. ${order?.trackingId || 'N/A'}`, margin, yPosition);
+                    yPosition += 6;
+                });
+
+                // Add total
+                yPosition += 10;
+                const totalAmount = returnOrdersData.reduce((sum, order) => sum + (parseFloat(order?.OrderAmount) || 0), 0);
+                pdf.setFontSize(10);
+                pdf.text(`Total Amount: ${totalAmount.toFixed(2)}`, margin, yPosition);
+                pdf.text(`Total Orders: ${returnOrdersData.length}`, pageWidth - margin - 60, yPosition, { align: 'right' });
+            } else {
+                // No orders message
+                pdf.setFontSize(12);
+                pdf.text('No orders found for the selected date range.', margin, yPosition);
+            }
+
+            // Save PDF
+            pdf.save(`Rider_Return_Report_${rider?.ridersName || 'Unknown'}_${new Date().getTime()}.pdf`);
+
+        } catch (error) {
+            console.error('PDF generation error:', error);
+            alert('Error generating PDF. Please try again.');
+        }
+    };
+
+
+    const [formData, setFormData] = useState({
+        RiderName: "",
+        ContactNo: "",
+        EmailAddress: "",
+        VehicleDetails: "",
+        LicenseNo: "",
+        RiderRefrenceNumber: "rider" + Date.now().toString().slice(5, 13),
+        AssignedArea: "",
+        password: "",
+        cnic: "",
+    });
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+    };
+    async function addRiderLogic() {
+        const data = await fetch(`${link}/riders/${rid}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                ridersName: formData.RiderName,
+                contactNo: formData.ContactNo,
+                emailAddress: formData.EmailAddress,
+                vehicle: formData.VehicleDetails,
+                licenseNo: formData.LicenseNo,
+                assignedArea: formData.AssignedArea,
+                password: formData.password,
+                cnic: formData.cnic,
+            })
+        })
+        if (data?.status === 401) {
+            localStorage.removeItem('token');
+            navigate('/');
+            return;
+        }
+        if (data?.status === 403) {
+            // Not authorized (not admin)
+            navigate('/');
+            return;
+        }
+        if (!data?.ok) {
+            throw new Error(`HTTP error! status: ${data.status}`);
+        }
+    }
+    const addRiderMutation = useMutation({
+        mutationFn: addRiderLogic,
+        onSuccess: () => {
+            setFormData({
+                RiderName: "",
+                ContactNo: "",
+                EmailAddress: "",
+                VehicleDetails: "",
+                LicenseNo: "",
+                RiderRefrenceNumber: "",
+                AssignedArea: "",
+                password: "",
+                cnic: "",
+            });
+            setOpenMenuAddUser(false);
+            queryClient.invalidateQueries({ queryKey: ['riders-details'] });
+        },
+        onError: (error) => {
+            console.error('Error:', error);
+            toast.error(`Failed : ${error.message}`, {
+                position: "top-right",
+                autoClose: 3000,
+                style: {
+                    background: '#d10115',
+                    color: 'white',
+                },
+            })
+        }
+    })
+    function addRider() {
+        addRiderMutation.mutate()
+    }
+
+    const [page1, setpage1] = useState(0)
+    function nextpage1() {
+        if (!formRef.current) return;
+        if (formRef.current.checkValidity()) {
+            setpage1(prev => Math.min(prev + 1, 2));
+        } else {
+            formRef.current.reportValidity();
+        }
+    }
+    function prevpage1() {
+        setpage1(prev => Math.max(prev - 1, 0));
+    }
+    const formRef = useRef(null);
+
+
+    async function blockUserLogic({ id, status }) {
+        try {
+            const response = await fetch(`${link}/riders/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    status: status,
+                })
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to update order status');
+            }
+            // toast.success("Order Confirmed Successfully!", {
+            //     position: "top-right",
+            //     autoClose: 3000,
+            // })
+        } catch (error) {
+            console.error('Error confirming order:', error);
+            // toast.error(`Failed to confirm order: ${error.message}`, {
+            //     position: "top-right",
+            //     autoClose: 3000,
+            //     style: {
+            //         background: '#d10115',
+            //         color: 'white',
+            //     },
+            // })
+        }
+    }
+    const blockUserMutation = useMutation({
+        mutationFn: blockUserLogic,
+        onSuccess: (data, variables) => {
+            console.log(data)
+            queryClient.invalidateQueries({ queryKey: ['riders-details'] });
+            navigate('/admin/riders')
+        },
+        onError: (error) => {
+            console.error('Error assigning rider:', error);
+            // toast.error(`Failed to confirm: ${error.message}`, {
+            //     position: "top-right",
+            //     autoClose: 3000,
+            //     style: {
+            //         background: '#d10115',
+            //         color: 'white',
+            //     },
+            // })
+        }
+    })
+    function blockUserFun(id, status) {
+        blockUserMutation.mutate({ id, status })
+    }
+    const isBlocking = blockUserMutation.isPending;
+
+
+    // -------------------------Timer----------------------------------
+    const [currentTime, setCurrentTime] = useState(0)
+    function timerFun(assigned, delivered) {
+        if (!assigned && !delivered) {
+            return "not assigned yet";
+        }
+        if (assigned && !delivered) {
+            return formatElapsedTime(assignedTime(assigned));
+        }
+        if (assigned && delivered) {
+            return formatElapsedTime(timeDiff(assigned, delivered));
+        }
+        return "something went wrong";
+    }
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentTime(Date.now());
+        }, 1000);
+        return () => clearInterval(interval);
+    }, []);
+    const formatElapsedTime = useCallback((milliseconds) => {
+        if (!milliseconds || milliseconds < 0) return '00:00:00';
+        const totalSeconds = Math.floor(milliseconds / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        return `${hours.toString().padStart(2, '0')} ${hours ? "h" : ""} : ${minutes.toString().padStart(2, '0')}${minutes ? "min" : ""} : ${seconds.toString().padStart(2, '0')}${seconds ? "s" : ""}`;
+    }, []);
+    const assignedTime = useCallback((assignedDate) => {
+        if (!assignedDate) return 0;
+        try {
+            const assignedTime = new Date(assignedDate).getTime();
+            const elapsed = currentTime - assignedTime;
+            return elapsed > 0 ? elapsed : 0;
+        } catch (error) {
+            return 0;
+        }
+    }, [currentTime])
+    const timeDiff = useCallback((assigned, delivered) => {
+        if (!assigned && !delivered) return 0;
+        try {
+            const assignedTime = new Date(assigned).getTime();
+            const deliveredTime = new Date(delivered).getTime();
+            const difference = deliveredTime - assignedTime;
+            return difference > 0 ? difference : 0;
+        } catch (error) {
+            return 0;
+        }
+    }, [])
+
+
+    // useEffect to refetch when date filters change
+    useEffect(() => {
+        if (page === 1) {
+            queryClient.invalidateQueries({ queryKey: ['pickupOrdersData'] });
+        }
+    }, [filterStartDatePickup, filterEndDatePickup]);
+
+    useEffect(() => {
+        if (page === 2) {
+            queryClient.invalidateQueries({ queryKey: ['returnOrdersData'] });
+        }
+    }, [filterStartDateReturn, filterEndDateReturn]);
+
+    useEffect(() => {
+        queryClient.invalidateQueries({ queryKey: ['ordersdata-delivery'] });
+    }, [filterStartDateDelivery, filterEndDateDelivery]);
+
+
+
+    // Loading state
+    if (ordersLoading) {
+        return (
+            <div className="overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-2 justify-center items-center w-7/8! sm:w-3/4 h-screen">
+                <div className="text-center">
+                    <p className="text-lg">Loading data...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Error state
+    if (ordersError) {
+        return (
+            <div className="overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-2 justify-center items-center w-7/8! sm:w-3/4 h-screen">
+                <div className="text-center text-red-600">
+                    <p className="text-lg">Error loading data: {ordersError?.message}</p>
+                </div>
+            </div>
+        );
+    }
+
+
+    return (
+        <>
+            {
+                ridersData?.map((a) => (
+                    <>
+                        <ToastContainer />
+                        <div key={a?._id} className="overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-4 justify-start items-start w-7/8! sm:w-3/4 h-screen">
+                            <div className="w-full flex flex-col md:flex-row gap-2">
+                                <div className="flex-1 rounded-lg p-4 text-white bg-linear-to-r from-gray-600 to-gray-800">
+                                    <div>
+                                        <h4>Rider Name :</h4>
+                                        <h5>{a?.ridersName}</h5>
+                                    </div>
+                                    <div>
+                                        <h4>vehicle :</h4>
+                                        <h5>{a?.vehicle}</h5>
+                                    </div>
+                                    <div>
+                                        <h4>Contact No :</h4>
+                                        <h5>{a?.contactNo}</h5>
+                                    </div>
+                                    <div>
+                                        <button disabled={isBlocking} style={{ backgroundColor: a?.status !== "BlockedRider" ? "#B91C1C" : "blue" }} className='rounded p-2' onClick={() => {
+                                            a?.status === "BlockedRider" ? blockUserFun(a?._id, 'rider') : blockUserFun(a?._id, 'BlockedRider')
+                                        }}>
+                                            {
+                                                (isBlocking || isFetching) ? 'Deleting..' : a?.status === "BlockedRider" ? "Undo Delete" : "Delete"
+                                            }
+                                        </button>
+                                        <button onClick={() => setOpenMenuAddUser(true)} className="ml-2! bg-[#d10115] text-gray-100 font-medium py-2 px-4 rounded text-nowrap">Update Rider</button>
+                                        <Dialog
+                                            open={openMenuAddUser}
+                                            onClose={() => setOpenMenuAddUser(false)}
+                                            md
+                                            maxWidth={false}
+                                        >
+                                            <DialogTitle
+                                                sx={{
+                                                    paddingY: "10px",
+                                                    width: "45vw",
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    alignItems: 'flex-start',
+                                                    gap: "1px",
+                                                }}
+                                            >
+                                                <div className="w-full flex flex-col gap-0 items-start">
+                                                    {/* <h3 className='! text-md! font-medium!' > Create Rider Account </h3> */}
+                                                    <form ref={formRef} className='w-full flex flex-col'>
+                                                        <div className="flex gap-[5%]">
+                                                            <div className="w-full">
+                                                                {page1 === 0 && (
+                                                                    <fieldset disabled={page1 !== 0}>
+                                                                        <label className=' text-[17px]'>Rider Name:</label>
+                                                                        <input name="RiderName" value={formData.RiderName} onChange={handleChange} type="text" className='text-gray-900 h-13! focus:outline-blue-500! mb-2! shadow-sm shadow-black/20 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='Rider Name' />
+                                                                        <label className=' text-[17px]'>Contact No:</label>
+                                                                        <input name="ContactNo" value={formData.ContactNo} onChange={handleChange} type="text" className='text-gray-900 h-13! focus:outline-blue-500! mb-2! shadow-sm shadow-black/20 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='Contact No' />
+                                                                        <label className=' text-[17px]'>Email Address:</label>
+                                                                        <input name="EmailAddress" value={formData.EmailAddress} onChange={handleChange} type="text" className='text-gray-900 h-13! focus:outline-blue-500! mb-2! shadow-sm shadow-black/20 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='Email Address' />
+                                                                        <label className=' text-[17px]'>Vehicle:</label>
+                                                                        <input name="VehicleDetails" value={formData.VehicleDetails} onChange={handleChange} type="text" className='text-gray-900 h-13! focus:outline-blue-500! mb-2! shadow-sm shadow-black/20 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='BIKE (no-plate)' />
+                                                                        <label className=' text-[17px]'>License No:</label>
+                                                                        <input name="LicenseNo" value={formData.LicenseNo} onChange={handleChange} type="text" className='text-gray-900 h-13! focus:outline-blue-500! mb-2! shadow-sm shadow-black/20 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='License Number' />
+                                                                        <label className=' text-[17px]'>Assigned Area:</label>
+                                                                        <input name="AssignedArea" value={formData.AssignedArea} onChange={handleChange} type="text" className='text-gray-900 h-13! focus:outline-blue-500! mb-2! shadow-sm shadow-black/20 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='Assigned Area' />
+                                                                    </fieldset>)}
+                                                                {page1 === 1 && (
+                                                                    <fieldset disabled={page1 !== 1}>
+                                                                        <label className=' text-[17px]'>Password:</label>
+                                                                        <input name="password" value={formData.password} onChange={handleChange} type="password" className='text-gray-900 h-13! focus:outline-blue-500! mb-2! shadow-sm shadow-black/20 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='password' />
+                                                                        <label className=' text-[17px]'>Cnic:</label>
+                                                                        <input name="cnic" value={formData.cnic} onChange={handleChange} type="text" className='text-gray-900 h-13! focus:outline-blue-500! mb-2! shadow-sm shadow-black/20 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='cnic' />
+                                                                    </fieldset>)}
+                                                            </div>
+                                                        </div>
+                                                        {page1 === 1 ? (
+                                                            <div className="flex w-full gap-2 py-3">
+                                                                <button
+                                                                    type="button"
+                                                                    disabled={page1 === 0}
+                                                                    onClick={prevpage1}
+                                                                    className="w-1/2 bg-blue-400 text-white rounded py-1"
+                                                                >
+                                                                    Back
+                                                                </button>
+
+                                                                <button
+                                                                    type="button"
+                                                                    className="w-1/2 bg-red-400 text-white rounded py-1"
+                                                                    onClick={addRider}
+                                                                >
+                                                                    Submit
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex w-full gap-3 py-3">
+                                                                <button
+                                                                    type="button"
+                                                                    disabled={page1 === 0}
+                                                                    onClick={prevpage1}
+                                                                    className={`w-1/2 ${page1 === 0 ? "bg-gray-400 cursor-not-allowed" : "bg-blue-400 cursor-pointer"} text-white rounded py-1`}
+                                                                >
+                                                                    Back
+                                                                </button>
+
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={nextpage1}
+                                                                    className={`w-1/2 text-white rounded py-1 bg-red-400!`}
+                                                                >
+                                                                    NEXT
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </form>
+                                                </div>
+                                            </DialogTitle>
+                                        </Dialog>
+                                        <button disabled={isBlocking} style={{ backgroundColor: a?.status === "activeRider" ? "#991B1B" : "blue" }} className='ml-2! bg-red-700 rounded p-2' onClick={() => {
+                                            a?.status === "activeRider" ? blockUserFun(a?._id, 'rider') : blockUserFun(a?._id, 'activeRider')
+                                        }}>
+                                            {
+                                                (isBlocking || isFetching) ? 'Pending..' : a?.status === "activeRider" ? "Inactivate" : "Activate"
+                                            }
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex-1 rounded-lg p-4 text-white bg-linear-to-r from-gray-700 to-gray-900">
+                                    <div>
+                                        <h4>License No :</h4>
+                                        <h5>{a?.licenseNo}</h5>
+                                    </div>
+                                    <div>
+                                        <h4>Assigned Area :</h4>
+                                        <h5>{a?.assignedArea}</h5>
+                                    </div>
+                                    <div>
+                                        <h4>Email Address :</h4>
+                                        <h5>{a?.emailAddress}</h5>
+                                    </div>
+                                    <div>
+                                        <h4>Cnic No :</h4>
+                                        <h5>{a?.cnic}</h5>
+                                    </div>
+                                    <div>
+                                        {/* <h4>Rider Id :</h4>
+                                        <h5>{a?._id}</h5> */}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="w-full flex gap-2 text-white">
+                                <button onClick={() => setPage(0)} className={`font-bold text-lg! w-1/3! ${page === 0 ? "bg-[#162A59]" : "bg-[#1E3A8A]"} py-2 rounded`}>
+                                    Delivered
+                                </button>
+                                <button onClick={() => { setPage(1), callPickupData() }} className={`font-bold text-lg! w-1/3! ${page === 1 ? "bg-[#162A59]" : "bg-[#1E3A8A]"} py-2 rounded`}>
+                                    Pickup
+                                </button>
+                                <button onClick={() => { setPage(2), callReturnData() }} className={`font-bold text-lg! w-1/3! ${page === 2 ? "bg-[#162A59]" : "bg-[#1E3A8A]"} py-2 rounded`}>
+                                    Return
+                                </button>
+                            </div>
+
+                            {
+                                page === 0
+                                    ?
+                                    <div className="w-full flex flex-col gap-2">
+                                        <div className="flex flex-col md:flex-row items-center justify-between">
+                                            <h2 className="text-2xl!">Delivered {filterStartDateDelivery !== "" || filterEndDateDelivery !== "" ? filterStartDateDelivery + " to " + filterEndDateDelivery : "All Orders"}</h2>
+                                            <button onClick={generatePDFDelivery} className="bg-green-600 rounded text-white p-2">Generate PDF</button>
+                                            <div className="flex items-center gap-2">
+                                                <label className="text-red-500 font-bold">Set Filter : </label>
+                                                <h5 className="m-0 p-0">from</h5>
+                                                <input className="bg-blue-200 rounded" type="date" value={filterStartDateDelivery} onChange={(e) => { setFilterStartDateDelivery(e.target.value) }} />
+                                                <h5 className="m-0 p-0">to</h5>
+                                                <input className="bg-red-200 rounded" type="date" value={filterEndDateDelivery} onChange={(e) => { setFilterEndDateDelivery(e.target.value) }} />
+                                            </div>
+                                        </div>
+                                        <div className='w-full h-auto overflow-scroll'>
+                                            <table className="bg-white border w-full rounded-lg shadow-md">
+                                                <thead className="text-white bg-[#041026]">
+                                                    <tr>
+                                                        <td className="p-4 text-center text-nowrap font-semibold">Sender Name </td>
+                                                        <td className="p-4 text-center text-nowrap font-semibold">Receiver Name </td>
+                                                        <td className="p-4 text-center text-nowrap font-semibold">Order tracking Id </td>
+                                                        {/* <td className="p-4 text-center text-nowrap font-semibold">Time </td> */}
+                                                        <td className="p-4 text-center text-nowrap font-semibold">Delivery Date </td>
+                                                        <td className="p-4 text-center text-nowrap font-semibold">Receiver Contact No </td>
+                                                        <td className="p-4 text-center text-nowrap font-semibold">Pickup Address </td>
+                                                        <td className="p-4 text-center text-nowrap font-semibold">Order Type</td>
+                                                        <td className="p-4 text-center text-nowrap font-semibold">Order Amount</td>
+                                                        <td className="p-4 text-center text-nowrap font-semibold">Delivery Address </td>
+                                                        <td className="p-4 text-center text-nowrap font-semibold">Status</td>
+                                                        <td className="p-4 text-center text-nowrap font-semibold">Dimensions </td>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {
+                                                        deliveryOrdersData?.map((a) => (
+                                                            <tr>
+                                                                <td className="p-4 text-center text-nowrap">{a?.creatorName}</td>
+                                                                <td className="p-4 text-center text-nowrap">{a?.CustomerName}</td>
+                                                                <td className="p-4 text-center text-nowrap">{a?.trackingId}</td>
+                                                                {/* <td className="p-4 text-center text-nowrap">{timerFun(a?.RiderAssignedDate, a?.RiderDeliveredDate)}</td> */}
+                                                                <td className="p-4 text-center text-nowrap">{a?.RiderDeliveredDate}</td>
+                                                                <td className="p-4 text-center text-nowrap">{a?.CustomerContactNo}</td>
+                                                                <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.PickupAddress}</td>
+
+                                                                <td className="p-4 text-center text-nowrap">{a?.OrderType}</td>
+                                                                <td className="p-4 text-center text-nowrap">{a?.OrderAmount + ' ' + 'Rs'}</td>
+                                                                <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.DeliveryAddress}</td>
+                                                                <td className="p-4 text-center text-nowrap">{a?.status}</td>
+                                                                <td className="p-4 text-center text-nowrap">{a?.Dimensions}</td>
+                                                            </tr>
+                                                        ))
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    :
+                                    null
+                            }
+
+
+
+                            {
+                                page === 1
+                                    ?
+                                    <div className="w-full flex flex-col gap-2">
+                                        <div className="flex  flex-col md:flex-row items-center justify-between">
+                                            <h2 className="text-2xl!">Picked {filterStartDatePickup !== "" || filterEndDatePickup !== "" ? filterStartDatePickup + " to " + filterEndDatePickup : "All Orders"}</h2>
+                                            <button onClick={generatePDFPickup} className="bg-green-600 rounded text-white p-2">Generate PDF</button>
+                                            <div className="flex items-center gap-2">
+                                                <label className="text-red-500 font-bold">Set Filter : </label>
+                                                <h5 className="m-0 p-0">from</h5>
+                                                <input className="bg-blue-200 rounded" type="date" value={filterStartDatePickup} onChange={(e) => { setFilterStartDatePickup(e.target.value) }} />
+                                                <h5 className="m-0 p-0">to</h5>
+                                                <input className="bg-red-200 rounded" type="date" value={filterEndDatePickup} onChange={(e) => { setFilterEndDatePickup(e.target.value) }} />
+                                            </div>
+                                        </div>
+                                        <div className='w-full h-auto overflow-scroll'>
+                                            {
+                                                pickupLoading ?
+                                                    <div className='flex justify-center items-center w-full h-auto py-50'>
+                                                        Loading
+                                                    </div>
+                                                    :
+                                                    <table className="bg-white border w-full rounded-lg shadow-md">
+                                                        <thead className="text-white bg-[#041026]">
+                                                            <tr>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Sender Name </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Receiver Name </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Order tracking Id </td>
+                                                                {/* <td className="p-4 text-center text-nowrap font-semibold">Time </td> */}
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Pickup Date </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Receiver Contact No </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Pickup Address </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Order Type</td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Order Amount</td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Delivery Address </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Status</td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Dimensions </td>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {
+                                                                pickupOrdersData?.map((a) => (
+                                                                    <tr>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.creatorName}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.CustomerName}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.trackingId}</td>
+                                                                        {/* <td className="p-4 text-center text-nowrap">{timerFun(a?.RiderAssignedDate, a?.RiderDeliveredDate)}</td> */}
+                                                                        <td className="p-4 text-center text-nowrap">{a?.RiderAssignedDate}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.CustomerContactNo}</td>
+                                                                        <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.PickupAddress}</td>
+
+                                                                        <td className="p-4 text-center text-nowrap">{a?.OrderType}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.OrderAmount + ' ' + 'Rs'}</td>
+                                                                        <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.DeliveryAddress}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.status}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.Dimensions}</td>
+                                                                    </tr>
+                                                                ))
+                                                            }
+                                                        </tbody>
+                                                    </table>
+                                            }</div>
+                                    </div>
+                                    :
+                                    null
+                            }
+
+                            {
+                                page === 2
+                                    ?
+                                    <div className="w-full flex flex-col gap-2">
+                                        <div className="flex flex-col md:flex-row items-center justify-between">
+                                            <h2 className="text-2xl!">Returned {filterStartDateReturn !== "" || filterEndDateReturn !== "" ? filterStartDateReturn + " to " + filterEndDateReturn : "All Orders"}</h2>
+                                            <button onClick={generatePDFReturn} className="bg-green-600 rounded text-white p-2">Generate PDF</button>
+                                            <div className="flex items-center gap-2">
+                                                <label className="text-red-500 font-bold">Set Filter : </label>
+                                                <h5 className="m-0 p-0">from</h5>
+                                                <input className="bg-blue-200 rounded" type="date" value={filterStartDateReturn} onChange={(e) => { setFilterStartDateReturn(e.target.value) }} />
+                                                <h5 className="m-0 p-0">to</h5>
+                                                <input className="bg-red-200 rounded" type="date" value={filterEndDateReturn} onChange={(e) => { setFilterEndDateReturn(e.target.value) }} />
+                                            </div>
+                                        </div>
+                                        <div className='w-full h-auto overflow-scroll'>
+                                            {
+                                                returnLoading ?
+                                                    <div className='flex justify-center items-center w-full h-auto py-50'>
+                                                        Loading
+                                                    </div>
+                                                    :
+                                                    <table className="bg-white border w-full rounded-lg shadow-md">
+                                                        <thead className="text-white bg-[#041026]">
+                                                            <tr>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Sender Name </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Receiver Name </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Order tracking Id </td>
+                                                                {/* <td className="p-4 text-center text-nowrap font-semibold">Time </td> */}
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Return Date </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Receiver Contact No </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Pickup Address </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Order Type</td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Order Amount</td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Delivery Address </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Status</td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Dimensions </td>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {
+                                                                returnOrdersData?.map((a) => (
+                                                                    <tr>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.creatorName}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.CustomerName}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.trackingId}</td>
+                                                                        {/* <td className="p-4 text-center text-nowrap">{timerFun(a?.RiderAssignedDate, a?.RiderDeliveredDate)}</td> */}
+                                                                        <td className="p-4 text-center text-nowrap">{a?.RiderReturnDate}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.CustomerContactNo}</td>
+                                                                        <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.PickupAddress}</td>
+
+                                                                        <td className="p-4 text-center text-nowrap">{a?.OrderType}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.OrderAmount + ' ' + 'Rs'}</td>
+                                                                        <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.DeliveryAddress}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.status}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.Dimensions}</td>
+                                                                    </tr>
+                                                                ))
+                                                            }
+                                                        </tbody>
+                                                    </table>
+                                            }</div>
+                                    </div>
+                                    :
+                                    null
+                            }
+
+                        </div>
+                    </>
+                ))
+            }
+        </>
+    )
+}

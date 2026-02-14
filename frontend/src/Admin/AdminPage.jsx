@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import {
   Chart as ChartJS,
   LineElement,
@@ -61,7 +62,7 @@ export default function Chart() {
       }
 
       // Fetch orders
-      const ordersResponse = await fetch('http://localhost:3000/orders/get-all-orders', {
+      const ordersResponse = await fetch(`${link}/orders/select/get-all-orders`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +83,7 @@ export default function Chart() {
       setOrders(ordersArray);
 
       // Fetch users
-      const usersResponse = await fetch('http://localhost:3000/users', {
+      const usersResponse = await fetch(`${link}/users/length`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -92,12 +93,12 @@ export default function Chart() {
 
       const usersData = await usersResponse.json();
       console.log('Users Data:', usersData); // Debug log
-      const usersArray = Array.isArray(usersData) ? usersData :
-        usersData.users || usersData.data || [];
-      setUsers(usersArray);
+      // const usersArray = Array.isArray(usersData) ? usersData :
+      //   usersData.users || usersData.data || [];
+      setUsers(usersData);
 
       // Fetch riders
-      const ridersResponse = await fetch('http://localhost:3000/riders', {
+      const ridersResponse = await fetch(`${link}/riders/length`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -107,9 +108,9 @@ export default function Chart() {
 
       const ridersData = await ridersResponse.json();
       console.log('Riders Data:', ridersData); // Debug log
-      const ridersArray = Array.isArray(ridersData) ? ridersData :
-        ridersData.riders || ridersData.data || [];
-      setRiders(ridersArray);
+      // const ridersArray = Array.isArray(ridersData) ? ridersData :
+      //   ridersData.riders || ridersData.data || [];
+      setRiders(ridersData);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -120,7 +121,7 @@ export default function Chart() {
 
   // Calculate statistics whenever data changes
   useEffect(() => {
-    if (orders.length > 0 || users.length > 0 || riders.length > 0) {
+    if (orders?.length > 0 || users > 0 || riders > 0) {
       calculateStats();
     }
   }, [orders, users, riders]);
@@ -128,13 +129,13 @@ export default function Chart() {
   const calculateStats = () => {
     // Debug: Check what data we have
     console.log('Calculating stats with:', {
-      ordersCount: orders.length,
-      usersCount: users.length,
-      ridersCount: riders.length
+      ordersCount: orders?.length,
+      usersCount: users,
+      ridersCount: riders
     });
 
     // If no data, return empty stats
-    if (orders.length === 0 && users.length === 0 && riders.length === 0) {
+    if (orders?.length === 0 && users === 0 && riders === 0) {
       setStats({
         totalEarnings: 0,
         totalOrders: 0,
@@ -158,8 +159,8 @@ export default function Chart() {
     );
 
     const totalOrders = orders.length;
-    const totalUsers = users.filter(us => us.status === "approved").length;
-    const totalRiders = riders.length;
+    const totalUsers = users;
+    const totalRiders = riders;
 
     // 2. Count orders by status - FIXED VERSION
     const pendingOrders = orders.filter(order => {
@@ -383,7 +384,7 @@ export default function Chart() {
     <div className="pt-5 flex flex-col gap-3 bg-gray-100 w-7/8! sm:w-3/4 h-screen overflow-auto p-4">
       {/* Debug Info - Remove in production */}
       {/* <div className="bg-yellow-100 p-2 rounded mb-2 text-sm">
-        <strong>Debug Info:</strong> Orders: {orders.length}, Users: {users.length}, Riders: {riders.length}
+        <strong>Debug Info:</strong> Orders: {orders.length}, Users: {users}, Riders: {riders}
       </div> */}
 
       {/* Stats Cards */}

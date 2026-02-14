@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useState, useContext, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -12,7 +13,7 @@ export default function Users() {
             return;
         }
 
-        const data = await fetch('http://localhost:3000/users/approved', {
+        const data = await fetch(`${link}/users/select/approved`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -51,6 +52,32 @@ export default function Users() {
             String(field).toLowerCase().includes(searchTerm.toLowerCase())
         )
     );
+
+    if (dataLoading) {
+        return (
+            <div className="pt-25! overflow-scroll! bg-white flex flex-col p-4 justify-center items-center w-screen h-screen">
+                <div className="text-center">
+                    <p className="text-lg">Loading riders...</p>
+                </div>
+            </div>
+        );
+    }
+    // Error state
+    if (dataError) {
+        return (
+            <div className="pt-25! overflow-scroll! bg-white flex flex-col p-4 justify-center items-center w-screen h-screen">
+                <div className="text-center text-red-600">
+                    <p className="text-lg">Error loading riders: {ridersError.message}</p>
+                    <button
+                        onClick={() => queryClient.refetchQueries({ queryKey: ['userOrders'] })}
+                        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+                    >
+                        Retry
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className=" overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-2 justify-start items-start w-7/8! sm:w-3/4 h-screen">

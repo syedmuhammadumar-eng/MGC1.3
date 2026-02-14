@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useCallback } from 'react';
 import { useEffect, useState } from 'react'
@@ -17,7 +18,7 @@ export default function Return() {
             return;
         }
 
-        const data = await fetch('http://localhost:3000/orders/orders-assigned-return', {
+        const data = await fetch(`${link}/orders/orders-assigned-return`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -54,7 +55,7 @@ export default function Return() {
             navigate('/');
             return;
         }
-        const data = await fetch(`http://localhost:3000/orders/${id}`, {
+        const data = await fetch(`${link}/orders/${id}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -145,12 +146,14 @@ export default function Return() {
                                 <tr>
                                     <td className="p-4 text-center text-nowrap font-semibold">Sender Name </td>
                                     <td className="p-4 text-center text-nowrap font-semibold">Customer Name </td>
-                                    {/* <td className="p-4 text-center text-nowrap font-semibold">Delivery Address </td> */}
+                                    <td className="p-4 text-center text-nowrap font-semibold">Tracking Id </td>
                                     <td className="p-4 text-center text-nowrap font-semibold">Customer Contact No </td>
                                     <td className="p-4 text-center text-nowrap font-semibold">Pickup Address </td>
                                     <td className="p-4 text-center text-nowrap font-semibold">Dimensions </td>
                                     <td className="p-4 text-center text-nowrap font-semibold">Cancel Reason </td>
                                     {/* <td className="p-4 text-center text-nowrap font-semibold">Order Amount </td> */}
+                                    <td className="p-4 text-center text-nowrap font-semibold">Order Amount </td>
+                                    <td className="p-2 text-center text-nowrap font-semibold">Payement Type </td>
                                     <td className="p-4 text-center text-nowrap font-semibold">Status </td>
                                     <td className="p-4 text-center text-nowrap font-semibold">Fragility </td>
                                     <td className="p-4 text-center text-nowrap font-semibold">Confirm Return</td>
@@ -163,12 +166,14 @@ export default function Return() {
                                         <tr key={b?._id}>
                                             <td className="p-4 text-center text-nowrap">{b?.creatorName}</td>
                                             <td className="p-4 text-center text-nowrap">{b?.CustomerName}</td>
-                                            {/* <td className="p-4 text-center text-nowrap">{b?.DeliveryAddress}</td> */}
+                                            <td className="p-4 text-center text-nowrap">{b?.trackingId}</td>
                                             <td className="p-4 text-center text-nowrap">{b?.CustomerContactNo}</td>
                                             <td className="p-4 text-center text-nowrap">{b?.PickupAddress}</td>
                                             <td className="p-4 text-center text-nowrap">{b?.Dimensions}</td>
                                             <td className="p-4 text-center text-nowrap">{b?.cancelReasons}</td>
                                             {/* <td className="p-4 text-center text-nowrap">{b?.OrderAmount} Rs</td> */}
+                                            <td className="p-4 text-center text-nowrap">{b?.OrderAmount}   {b?.OrderAmount ? "Rs" : " 0 Rs "}</td>
+                                            <td className="p-2 text-center text-nowrap">{b?.CodType}</td>
                                             <td className="p-4 text-center text-nowrap">{b?.status}</td>
                                             <td className="p-4 text-center text-nowrap">{b?.fragility}</td>
                                             <td className="p-4 text-center text-nowrap">

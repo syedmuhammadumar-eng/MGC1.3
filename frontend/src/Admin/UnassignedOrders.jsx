@@ -82,7 +82,7 @@
 //     }
 
 //     const { data: rider, isLoading: ridersLoading, error: ridersError } = useQuery({
-//         queryKey: ['riders'],
+//         queryKey: ['riders-assigning-for-pickup'],
 //         queryFn: getRiders,
 //         retry: 1,
 //         refetchOnWindowFocus: false,
@@ -322,6 +322,7 @@
 // }
 
 
+import { link } from '../backendLink.js';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useState, useEffect } from 'react'
 import { Global } from "../global";
@@ -378,7 +379,7 @@ export default function UnassignedOrders() {
             navigate('/');
             return;
         }
-        const data = await fetch('http://localhost:3000/orders/', {
+        const data = await fetch(`${link}/orders/`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -405,7 +406,7 @@ export default function UnassignedOrders() {
         queryKey: ['unassignedOrders'],
         queryFn: getOrders,
         retry: 1,
-        refetchOnWindowFocus: true,
+        refetchOnWindowFocus: false,
     })
 
     // Fetch riders
@@ -415,7 +416,7 @@ export default function UnassignedOrders() {
             navigate('/');
             return;
         }
-        const data = await fetch('http://localhost:3000/riders/riders-active', {
+        const data = await fetch(`${link}/riders/riders-active`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -440,7 +441,7 @@ export default function UnassignedOrders() {
     }
 
     const { data: rider, isLoading: ridersLoading, error: ridersError } = useQuery({
-        queryKey: ['riders'],
+        queryKey: ['riders-assigning-for-pickup'],
         queryFn: getRiders,
         retry: 1,
         refetchOnWindowFocus: false,
@@ -453,7 +454,7 @@ export default function UnassignedOrders() {
             navigate('/');
             return;
         }
-        const data = await fetch(`http://localhost:3000/orders/${orderId}`, {
+        const data = await fetch(`${link}/orders/${orderId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -585,9 +586,12 @@ export default function UnassignedOrders() {
                             <thead className="text-white bg-[#041026]">
                                 <tr>
                                     <td className="p-4 text-center text-nowrap font-semibold">Sender Name </td>
-                                    <td className="p-4 text-center text-nowrap font-semibold">Order Date </td>
+                                    <td className="p-4 text-center text-nowrap font-semibold">Pickup City </td>
                                     <td className="p-4 text-center text-nowrap font-semibold">Pickup Address </td>
-                                    <td className="p-4 text-center text-nowrap font-semibold">Status</td>
+                                    <td className="p-4 text-center text-nowrap font-semibold">Receiver City </td>
+                                    <td className="p-4 text-center text-nowrap font-semibold">Receiver's Address </td>
+                                    {/* <td className="p-4 text-center text-nowrap font-semibold">Order Date </td> */}
+                                    {/* <td className="p-4 text-center text-nowrap font-semibold">Status</td> */}
                                     <td className="p-4 text-center text-nowrap font-semibold">Assign </td>
                                 </tr>
                             </thead>
@@ -596,9 +600,12 @@ export default function UnassignedOrders() {
                                     filteredData?.map((a) => (
                                         <tr key={a?._id}>
                                             <td className="p-4 text-center text-nowrap">{a?.creatorName}</td>
-                                            <td className="p-4 text-center text-nowrap">{a?.OrderDate}</td>
+                                            <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.PickupCity}</td>
                                             <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.PickupAddress}</td>
-                                            <td className="p-4 text-center text-nowrap">{a?.status}</td>
+                                            <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.DeliveryCity}</td>
+                                            <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.DeliveryAddress}</td>
+                                            {/* <td className="p-4 text-center text-nowrap">{a?.OrderDate}</td> */}
+                                            {/* <td className="p-4 text-center text-nowrap">{a?.status}</td> */}
                                             <td className="p-4 text-center">
                                                 <button
                                                     onClick={() => setOpenMenuAssignRider(a?._id)}

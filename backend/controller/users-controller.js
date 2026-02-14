@@ -1,3 +1,4 @@
+const jwtTokenSecret = require('../.env.js');
 const UserModel = require('../models/user-model')
 const HttpError = require('../models/http-error');
 const OrdersModel = require('../models/orders-model');
@@ -50,7 +51,7 @@ const signup = async (req, res, next) => {
         try {
             token = jwt.sign(
                 { status: createdUser.status, userId: createdUser._id, Email: createdUser.Email, Name: createdUser.CompanyName },  //data should be send through token
-                'super-duper-hassan-secret-dont-share',   //token key and without it data in token will not be unlock
+                jwtTokenSecret,   //token key and without it data in token will not be unlock
                 { expiresIn: '360h' }       //it is necessary because even if the token get compromise then still it will be valid after 360h
             )
         } catch (err) {
@@ -113,7 +114,7 @@ const signupVendor = async (req, res, next) => {
         try {
             token = jwt.sign(
                 { status: createdUser.status, userId: createdUser._id, Email: createdUser.Email, Name: createdUser.CompanyName },  //data should be send through token
-                'super-duper-hassan-secret-dont-share',   //token key and without it data in token will not be unlock
+                jwtTokenSecret,   //token key and without it data in token will not be unlock
                 { expiresIn: '360h' }       //it is necessary because even if the token get compromise then still it will be valid after 12h
             )
         } catch (err) {
@@ -125,6 +126,59 @@ const signupVendor = async (req, res, next) => {
         return next(new HttpError("Could not Create user", 500));
     }
 }
+
+const signupEmploye = async (req, res, next) => {
+    try {
+        const {
+            CompanyName,
+            PhoneNo,
+            Email,
+            password,
+            status,
+        } = req.body;
+        //cnicCopyImage will be handle soon
+        const existingUser = await UserModel.findOne({ Email });
+        if (existingUser) {
+            return next(new HttpError("Email already exists", 422));
+        }
+        // BCRYPT
+        let hashedPassword;
+        try {
+            hashedPassword = await bcrypt.hash(password, 12)  //its first param is the input we get from frontend and second is called salt and it tells how hard should be the hashing to dcrypt
+        } catch (err) {
+            return next(new HttpError('Could not create user', 500))
+        }
+        const createdUser = new UserModel({
+            CompanyName,
+            PhoneNo,
+            Email,
+            password:hashedPassword,
+            status,
+        })
+        await createdUser.save()
+
+        let token;
+        try {
+            token = jwt.sign(
+                {
+                    CompanyName: createdUser.CompanyName,
+                    PhoneNo: createdUser.PhoneNo,
+                    Email: createdUser.Email,
+                    status: createdUser.status,
+                },  //data should be send through token
+                jwtTokenSecret,   //token key and without it data in token will not be unlock
+                { expiresIn: '360h' }       //it is necessary because even if the token get compromise then still it will be valid after 12h
+            )
+        } catch (err) {
+            return next(new HttpError('Could not create User'))
+        }
+
+        return res.json({ token, message: "added employe" })
+    } catch (err) {
+        return next(new HttpError("Could not Create user", 500));
+    }
+}
+exports.signupEmploye = signupEmploye;
 
 
 //LOGIN
@@ -143,7 +197,7 @@ const login = async (req, res, next) => {
             try {
                 token = jwt.sign(
                     { status: foundUser.status, userId: foundUser._id, Email: foundUser.Email, Name: foundUser.CompanyName },  //data should be send through token
-                    'super-duper-hassan-secret-dont-share',   //token key and without it data in token will not be unlock
+                    jwtTokenSecret,   //token key and without it data in token will not be unlock
                     { expiresIn: '360h' }       //it is necessary because even if the token get compromise then still it will be valid after 12h
                 )
             } catch (err) {
@@ -152,14 +206,20 @@ const login = async (req, res, next) => {
             if (foundUser.status === "") {
                 return res.status(200).json({ message: "Not Approved yet", token })
             }
-            if (foundUser.status === "admin") {
-                return res.status(200).json({ message: "admin", token })
-            }
             if (foundUser.status === "approved") {
                 return res.status(200).json({ message: "approved", token, name: foundUser?.CompanyName })
             }
             if (foundUser.status === "vendor") {
                 return res.status(200).json({ message: "vendor", token, name: foundUser?.CompanyName })
+            }
+            if (foundUser.status === "admin") {
+                return res.status(200).json({ message: "admin", token })
+            }
+            if (foundUser.status === "manager") {
+                return res.status(200).json({ message: "manager", token, name: foundUser?.CompanyName })
+            }
+            if (foundUser.status === "accountant") {
+                return res.status(200).json({ message: "accountant", token, name: foundUser?.CompanyName })
             }
         }
 
@@ -173,7 +233,7 @@ const login = async (req, res, next) => {
             try {
                 token = jwt.sign(
                     { ridersId: foundRider._id, Email: foundRider.emailAddress, Name: foundRider.ridersName },  //data should be send through token
-                    'super-duper-hassan-secret-dont-share',   //token key and without it data in token will not be unlock
+                    jwtTokenSecret,   //token key and without it data in token will not be unlock
                     { expiresIn: '360h' }       //it is necessary because even if the token get compromise then still it will be valid after 12h
                 )
             } catch (err) {
@@ -195,7 +255,31 @@ const authenticateAdminToken = (req, res, next) => {
     if (!token) {
         return res.status(401).json({ error: 'Access token required' });
     }
-    jwt.verify(token, "super-duper-hassan-secret-dont-share", (err, user) => {
+    jwt.verify(token, jwtTokenSecret,async (err, user) => {
+        if (err) {
+            // Token is either expired or invalid
+            if (err.name === 'TokenExpiredError') {
+                return res.status(401).json({ error: 'Token expired' });
+            }
+            return res.status(403).json({ error: 'Invalid token' });
+        }
+        req.user = user;
+
+        const dbData = await UserModel.findOne({ _id: req.user.userId })
+        if (dbData?.status !== "admin" && dbData?.status !== "manager" ) {
+            return next(new HttpError('Only Admin and Manager is authenticated', 403))
+        }
+        next();
+    });
+};
+
+const authenticateOnlyAdminToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ error: 'Access token required' });
+    }
+    jwt.verify(token, jwtTokenSecret, (err, user) => {
         if (err) {
             // Token is either expired or invalid
             if (err.name === 'TokenExpiredError') {
@@ -211,6 +295,7 @@ const authenticateAdminToken = (req, res, next) => {
         next();
     });
 };
+exports.authenticateOnlyAdminToken = authenticateOnlyAdminToken;
 
 //GETTING DATA
 const getUser = async (req, res, next) => {
@@ -223,9 +308,41 @@ const getUser = async (req, res, next) => {
     }
 }
 
+const getApprovedUserLength = async (req, res, next) => {
+    try {
+        const users = await UserModel.countDocuments({ status: "approved" });
+        res.json(users)
+    }
+    catch (err) {
+        return next(new HttpError("Could not Get user", 500));
+    }
+}
+
 const getVendor = async (req, res, next) => {
     try {
         const users = await UserModel.find({ status: { $in: ["vendor", "BlockedVendor"] } })
+        res.json(users)
+    }
+    catch (err) {
+        return next(new HttpError("Could not Get user", 500));
+    }
+}
+
+const getEmploye = async (req, res, next) => {
+    try {
+        const users = await UserModel.find({ status: { $in: ["accountant", "manager"] } })
+        res.json(users)
+    }
+    catch (err) {
+        return next(new HttpError("Could not Get user", 500));
+    }
+}
+exports.getEmploye = getEmploye;
+
+
+const getVendorSelect = async (req, res, next) => {
+    try {
+        const users = await UserModel.find({ status: { $in: ["vendor", "BlockedVendor"] } }).select('Email CompanyName')
         res.json(users)
     }
     catch (err) {
@@ -258,9 +375,22 @@ const getUnapprovedUser = async (req, res, next) => {
         return next(new HttpError("Could not Get User", 500));
     }
 }
+
 const getApprovedUser = async (req, res, next) => {
     try {
         const userById = await UserModel.find({ status: { $in: ["approved", "Blocked"] } })
+        if (!userById) {
+            return next(new HttpError("User not found", 404));
+        }
+        return res.status(200).json({ user: userById })
+    } catch (err) {
+        return next(new HttpError("Could not Get User", 500));
+    }
+}
+
+const getApprovedUserSelect = async (req, res, next) => {
+    try {
+        const userById = await UserModel.find({ status: { $in: ["approved", "Blocked"] } }).select('Email CompanyName')
         if (!userById) {
             return next(new HttpError("User not found", 404));
         }
@@ -385,6 +515,13 @@ exports.getVendor = getVendor;
 
 exports.login = login;
 exports.getUser = getUser;
+
+exports.getApprovedUserLength = getApprovedUserLength;
+
+exports.getVendorSelect = getVendorSelect;
+
+exports.getApprovedUserSelect = getApprovedUserSelect;
+
 exports.getApprovedUser = getApprovedUser;
 exports.getUnapprovedUser = getUnapprovedUser;
 exports.getUserById = getUserById;

@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
 import { BrowserMultiFormatReader } from "@zxing/library";
@@ -125,7 +126,7 @@ export default function RiderScanOrders() {
             return;
         }
 
-        const data = await fetch('http://localhost:3000/orders/assigned-to-rider-to-pickup-auth-rider', {
+        const data = await fetch(`${link}/orders/assigned-to-rider-to-pickup-auth-rider`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -161,7 +162,7 @@ export default function RiderScanOrders() {
             navigate('/');
             return;
         }
-        const data = await fetch(`http://localhost:3000/orders/${id}`, {
+        const data = await fetch(`${link}/orders/${id}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -220,7 +221,7 @@ export default function RiderScanOrders() {
             navigate('/');
             return;
         }
-        const data = await fetch(`http://localhost:3000/orders/${id}`, {
+        const data = await fetch(`${link}/orders/${id}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -368,6 +369,8 @@ export default function RiderScanOrders() {
                                                     <td className="p-4 text-center text-nowrap font-semibold">Pickup Address </td>
                                                     <td className="p-4 text-center text-nowrap font-semibold">Tracking Id </td>
                                                     <td className="p-4 text-center text-nowrap font-semibold">Order Date </td>
+                                                    <td className="p-4 text-center text-nowrap font-semibold">Order Amount </td>
+                                                    <td className="p-2 text-center text-nowrap font-semibold">Payement Type </td>
                                                     {/* <td className="p-4 text-center text-nowrap font-semibold">Customer Contact No </td> */}
                                                     {/* <td className="p-4 text-center text-nowrap font-semibold">Delivery Address </td> */}
                                                     <td className="p-4 text-center text-nowrap font-semibold">Add </td>
@@ -381,6 +384,8 @@ export default function RiderScanOrders() {
                                                     <td className="p-4 text-center text-nowrap">{a?.PickupAddress}</td>
                                                     <td className="p-4 text-center text-nowrap">{a?.trackingId}</td>
                                                     <td className="p-4 text-center text-nowrap">{a?.OrderDate}</td>
+                                                    <td className="p-4 text-center text-nowrap">{a?.OrderAmount}   {a?.OrderAmount ? "Rs" : " 0 Rs "}</td>
+                                                    <td className="p-2 text-center text-nowrap">{a?.CodType}</td>
                                                     {/* <td className="p-4 text-center text-nowrap">{a?.CustomerContactNo}</td> */}
                                                     {/* <td className="p-4 text-center text-nowrap">{a?.DeliveryAddress}</td> */}
                                                     <td className="p-4 text-center text-nowrap">

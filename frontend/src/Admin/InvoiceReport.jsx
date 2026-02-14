@@ -1,48 +1,54 @@
+import { link } from '../backendLink.js';
 import logo from '../assets/MGC.png';
 import { useEffect } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom"
 import { jsPDF } from 'jspdf';
 
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
 export default function RidersDetails() {
     const navigate = useNavigate()
 
     const [ridersData, setRidersData] = useState("")
-    const [ordersData, setOrdersData] = useState()
-    useEffect(() => {
-        async function a() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                navigate('/');
-                return;
-            }
-
-            const data = await fetch(`http://localhost:3000/orders/get-all-orders`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-            })
-            if (data?.status === 401) {
-                localStorage.removeItem('token');
-                navigate('/');
-                return;
-            }
-            if (data?.status === 403) {
-                // Not authorized (not admin)
-                navigate('/');
-                return;
-            }
-            if (!data?.ok) {
-                throw new Error(`HTTP error! status: ${data.status}`);
-            }
-            const info = await data.json()
-            console.log(info)
-            setOrdersData(info)
+    // const [ordersData, setOrdersData] = useState()
+    async function ordersDataLogic() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/');
+            return;
         }
-        a();
-    }, [])
+
+        const data = await fetch(`${link}/orders/get-all-orders`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+        })
+        if (data?.status === 401) {
+            localStorage.removeItem('token');
+            navigate('/');
+            return;
+        }
+        if (data?.status === 403) {
+            // Not authorized (not admin)
+            navigate('/');
+            return;
+        }
+        if (!data?.ok) {
+            throw new Error(`HTTP error! status: ${data.status}`);
+        }
+        const info = await data.json()
+        console.log(info)
+        return info;
+    }
+    const { data: ordersData, isLoading: ordersLoading, error: ordersError } = useQuery({
+        queryKey: ['ordersdata-invoice'],
+        queryFn: ordersDataLogic,
+        retry: 1,
+        refetchOnWindowFocus: true,
+    })
 
 
     const loadImage = (url) =>
@@ -74,13 +80,13 @@ export default function RidersDetails() {
             // Sizes
             const headingFontSize = 20;
             const logoHeight = 25;
-            const logoWidth = 70    ;
+            const logoWidth = 70;
             pdf.setFontSize(headingFontSize);
             const text = 'INVOICE REPORT';
             const textWidth = pdf.getTextWidth(text);
             const gap = 3;
             const totalWidth = logoWidth + gap + textWidth;
-            const startX = ((pdf.internal.pageSize.getWidth() - totalWidth) / 2)-40;
+            const startX = ((pdf.internal.pageSize.getWidth() - totalWidth) / 2) - 40;
             pdf.addImage(
                 img,
                 'PNG',
@@ -286,6 +292,28 @@ export default function RidersDetails() {
             String(field).toLowerCase().includes(searchTerm.toLowerCase())
         )
     );
+
+    // // Loading state
+    // if (ordersLoading) {
+    //     return (
+    //         <div className="overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-2 justify-center items-center w-7/8! sm:w-3/4 h-screen">
+    //             <div className="text-center">
+    //                 <p className="text-lg">Loading data...</p>
+    //             </div>
+    //         </div>
+    //     );
+    // }
+
+    // // Error state
+    // if (ordersError) {
+    //     return (
+    //         <div className="overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-2 justify-center items-center w-7/8! sm:w-3/4 h-screen">
+    //             <div className="text-center text-red-600">
+    //                 <p className="text-lg">Error loading data: {ordersError?.message}</p>
+    //             </div>
+    //         </div>
+    //     );
+    // }
 
     return (
         <>

@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -12,7 +13,7 @@ export default function RiderPage() {
                 return;
             }
 
-            const data = await fetch('http://localhost:3000/riders/rider-own-data', {
+            const data = await fetch(`${link}/riders/rider-own-data`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

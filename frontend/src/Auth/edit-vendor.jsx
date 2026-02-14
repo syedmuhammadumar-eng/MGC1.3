@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useContext, useEffect, useRef, useState } from 'react';
 import { Global } from '../global';
@@ -56,7 +57,7 @@ export default function EditVendor({ vendorId }) {
 
     async function addUserLogic(formData) {
         try {
-            const formRes = await fetch(`http://localhost:3000/users/${vendorId}`, {
+            const formRes = await fetch(`${link}/users/${vendorId}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

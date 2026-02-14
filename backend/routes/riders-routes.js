@@ -6,6 +6,10 @@ const userController = require('../controller/users-controller')
 
 router.get('/',userController.authenticateAdminToken, ridersController.getRiders)
 
+router.get('/ridernames', ridersController.getRidersNames)
+
+router.get('/length',userController.authenticateAdminToken, ridersController.getRidersLength)
+
 router.get('/riders-not-deleted',userController.authenticateAdminToken, ridersController.getNotDeletedRiders)
 router.get('/riders-deleted',userController.authenticateAdminToken, ridersController.getDeletedRiders)
 router.get('/riders-active',userController.authenticateAdminToken, ridersController.getActiveRiders)

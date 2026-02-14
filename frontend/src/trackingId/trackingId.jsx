@@ -12,6 +12,8 @@ import image10 from '../assets/statusIcons/10.png'
 
 // banner
 import banner from '../assets/banners/trackingIdBanner.jpg'
+
+import { link } from '../backendLink.js';
 import { useState } from 'react'
 
 export default function TrackingId() {
@@ -32,16 +34,16 @@ export default function TrackingId() {
     const [apiData, setApiData] = useState()
     const [rawData, setRawData] = useState()
     const [error, setError] = useState("")
-    
+
     // Function to get icon based on status
     const getStatusIcon = (status) => {
         if (!status) return image1; // Default icon
-        
+
         // Find matching status in statusData
-        const matchedStatus = statusData.find(item => 
+        const matchedStatus = statusData.find(item =>
             status.toLowerCase().includes(item.statusText.toLowerCase())
         );
-        
+
         // If no exact match, try partial matches
         if (!matchedStatus) {
             if (status.toLowerCase().includes("booked")) return image1;
@@ -53,33 +55,33 @@ export default function TrackingId() {
             if (status.toLowerCase().includes("delivered")) return image7;
             if (status.toLowerCase().includes("return")) return image8;
         }
-        
+
         return matchedStatus ? matchedStatus.iconURL : image1;
     }
 
     async function track(param) {
         param.preventDefault();
 
-        if(trackingId === ""){
+        if (trackingId === "") {
             setError("Please enter a tracking number")
             return;
         }
 
         try {
-            const Response = await fetch(`http://localhost:3000/orders/track/${trackingId}`,{
+            const Response = await fetch(`${link}/orders/track/${trackingId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
             });
-            
+
             if (!Response.ok) {
                 throw new Error('Failed to fetch tracking information');
             }
-            
+
             const Data = await Response.json();
-            
+
             if (Data.message && Data.message.includes("not found")) {
                 setApiData(null);
                 setRawData(Data);
@@ -105,22 +107,22 @@ export default function TrackingId() {
                 <div className=" mb-30! flex flex-column gap-3 xl:flex-row! justify-between items-center w-80! sm:w-150! md:w-200! lg:w-250! xl:w-300! -mt-10 rounded text-gray-200 py-4 px-3 bg-[#ff3f39]">
                     <p className='m-0 text-2xl font-bold'>Enter Your Tracking Number</p>
                     <form onSubmit={track} className='flex flex-nowrap w-full xl:w-[400px]!'>
-                        <input 
-                            value={trackingId} 
+                        <input
+                            value={trackingId}
                             onChange={(e) => {
                                 setTrackingId(e.target.value);
                                 setError("");
-                            }} 
-                            placeholder='Enter Tracking #' 
-                            className='bg-white w-[80%] h-15 pl-5 text-black!' 
-                            type="text" 
+                            }}
+                            placeholder='Enter Tracking #'
+                            className='bg-white w-[80%] h-15 pl-5 text-black!'
+                            type="text"
                         />
                         <button type='submit' className='bg-[#041026] px-0 w-[20%] py-3 text-xl!'>
                             Track
                         </button>
                     </form>
                 </div>
-                
+
                 {error && (
                     <div className="mt-4 p-3 bg-red-100 text-red-700 rounded">
                         {error}
@@ -129,7 +131,7 @@ export default function TrackingId() {
 
                 {
                     apiData && apiData.length > 0 && rawData?.message === undefined
-                    ?
+                        ?
                         <>
                             <div className="flex justify-between gap-2 w-80! sm:w-150! md:w-200! xl:w-300!">
                                 <div className="w-[45%] shadow shadow-black/30 mt-10">
@@ -163,10 +165,10 @@ export default function TrackingId() {
                                             <li key={p?._id} className="p-0 flex items-center ml-0! xl:ml-30! gap-0! sm:gap-3! w-full">
                                                 <span className="rounded-[50%] w-[100px]! h-[100px]! sm:w-[100px]! bg-red-500 text-white flex justify-center items-center">
                                                     {/* Use getStatusIcon function to get the correct image */}
-                                                    <img 
-                                                        className="invert w-[50px] h-[50px]" 
-                                                        src={getStatusIcon(p?.status)} 
-                                                        alt={p?.status || "Status"} 
+                                                    <img
+                                                        className="invert w-[50px] h-[50px]"
+                                                        src={getStatusIcon(p?.status)}
+                                                        alt={p?.status || "Status"}
                                                     />
                                                 </span>
                                                 <span className="shadow-md shadow-black/30 rounded py-4 px-3 flex items-center justify-between w-[80%]">
@@ -184,9 +186,9 @@ export default function TrackingId() {
                             </div>
                         </>
                         :
-                        rawData?.message ? 
-                            <h1 className='my-20! text-red-600! font-bold!'>{rawData.message}</h1> 
-                            : 
+                        rawData?.message ?
+                            <h1 className='my-20! text-red-600! font-bold!'>{rawData.message}</h1>
+                            :
                             trackingId && <h1 className='my-20! text-red-600! font-bold!'>No Result Found!</h1>
                 }
             </div>
@@ -301,7 +303,7 @@ export default function TrackingId() {
 //                             </div>
 //                         </>
 //                         :
-//                         <h1 className='my-20! text-red-600! font-bold!'>{rawData?.message ? rawData?.message || rawData?.error : "No Result"}</h1> 
+//                         <h1 className='my-20! text-red-600! font-bold!'>{rawData?.message ? rawData?.message || rawData?.error : "No Result"}</h1>
 //                 }
 //             </div>
 //         </>

@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
@@ -21,7 +22,7 @@ export default function Riders() {
             return;
         }
 
-        const data = await fetch('http://localhost:3000/riders/riders-not-deleted', {
+        const data = await fetch(`${link}/riders/riders-not-deleted`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -77,7 +78,7 @@ export default function Riders() {
     const confPassRef = useRef(null);
 
     async function addRiderLogic(e) {
-        const data = await fetch('http://localhost:3000/riders/signup', {
+        const data = await fetch(`${link}/riders/signup`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -246,7 +247,7 @@ export default function Riders() {
                                                 <label className=' text-[17px]'>Vehicle:</label>
                                                 <input required name="VehicleDetails" value={formData.VehicleDetails} onChange={handleChange} type="text" className='text-gray-900 h-13! focus:outline-blue-500! mb-2! shadow-sm shadow-black/20 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='BIKE (no-plate)' />
                                                 <label className=' text-[17px]'>License No:</label>
-                                                <input required name="LicenseNo" value={formData.LicenseNo} onChange={handleChange} type="text" className='text-gray-900 h-13! focus:outline-blue-500! mb-2! shadow-sm shadow-black/20 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='License Number' />
+                                                <input  name="LicenseNo" value={formData.LicenseNo} onChange={handleChange} type="text" className='text-gray-900 h-13! focus:outline-blue-500! mb-2! shadow-sm shadow-black/20 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='License Number' />
                                                 <label className=' text-[17px]'>Assigned Area:</label>
                                                 <input required name="AssignedArea" value={formData.AssignedArea} onChange={handleChange} type="text" className='text-gray-900 h-13! focus:outline-blue-500! mb-2! shadow-sm shadow-black/20 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='Assigned Area' />
                                             </fieldset>)}
@@ -318,11 +319,11 @@ export default function Riders() {
                                     <div className='flex items-center justify-between! w-full'>
                                         <div className='flex items-center'>
                                             <div className='mr-10 bg-blue-900 rounded-[50%] h-20 w-20 flex justify-center items-center'>
-                                                <h2 className="p-4 text-center text-nowrap">{a?.ridersName[0].toUpperCase()}</h2>
+                                                <h2 className="p-4 text-center text-nowrap">{a?.ridersName[0]?.toUpperCase()}</h2>
                                             </div>
                                             <div className="text-black flex flex-col justify-between h-15">
-                                                <h3 className="text-justify text-nowrap font-bold">{a?.ridersName}</h3>
-                                                <div className="text-justify text-nowrap">{a?.emailAddress}</div>
+                                                <h3 className="text-justify text-wrap! font-bold">{a?.ridersName}</h3>
+                                                <div className="text-justify text-wrap!">{a?.emailAddress}</div>
                                             </div>
                                         </div>
 

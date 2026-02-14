@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useContext, useEffect, useRef, useState } from 'react';
 import { Global } from '../global';
@@ -57,7 +58,7 @@ export default function Signup() {
             formRef.current.reportValidity();
             return;
         }
-        const formRes = await fetch('http://localhost:3000/users/signup', {
+        const formRes = await fetch(`${link}/users/signup`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

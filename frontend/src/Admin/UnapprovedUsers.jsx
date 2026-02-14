@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useState, useContext, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -16,7 +17,7 @@ export default function UnapprovedUsers() {
             navigate('/');
             return;
         }
-        const data = await fetch('http://localhost:3000/users/unapproved', {
+        const data = await fetch(`${link}/users/unapproved`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -47,7 +48,7 @@ export default function UnapprovedUsers() {
     })
 
     async function approveLogic(id) {
-        const data = await fetch(`http://localhost:3000/users/${id}`, {
+        const data = await fetch(`${link}/users/${id}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -80,7 +81,7 @@ export default function UnapprovedUsers() {
     }
 
     async function cancelLogic(id) {
-        const data = await fetch(`http://localhost:3000/users/${id}`, {
+        const data = await fetch(`${link}/users/${id}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',

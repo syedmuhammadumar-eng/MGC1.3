@@ -1,3 +1,4 @@
+const jwtTokenSecret = require('../.env.js');
 const UserModel = require('../models/user-model')
 const HttpError = require('../models/http-error');
 const OrdersModel = require('../models/orders-model');
@@ -43,7 +44,7 @@ const signup = async (req, res, next) => {
         try {
             token = jwt.sign(
                 { status: createdRiders.status, ridersId: createdRiders._id, emailAddress: createdRiders.emailAddress, Name: createdRiders.ridersName },
-                'super-duper-hassan-secret-dont-share',
+                jwtTokenSecret,
                 { expiresIn: '12h' }
             )
         } catch (err) {
@@ -65,7 +66,7 @@ const authenticateRiderToken = async (req, res, next) => {
         }
         let decoded;
         try {
-            decoded = jwt.verify(token, "super-duper-hassan-secret-dont-share")
+            decoded = jwt.verify(token, jwtTokenSecret)
         } catch (err) {
             if (err.name === 'TokenExpiredError') {
                 return next(new HttpError('Token Expired', 401))
@@ -97,6 +98,26 @@ const getRiders = async (req, res, next) => {
     }
 }
 
+const getRidersNames = async (req, res, next) => {
+    try {
+        const riders = await RidersModel.find().select('ridersName')
+        res.json(riders)
+    }
+    catch (err) {
+        return next(new HttpError("Could not Get rider", 500));
+    }
+}
+
+const getRidersLength = async (req, res, next) => {
+    try {
+        const riders = await RidersModel.countDocuments()
+        res.json(riders)
+    }
+    catch (err) {
+        return next(new HttpError("Could not Get rider", 500));
+    }
+}
+
 const getActiveRiders = async (req, res, next) => {
     try {
         const riders = await RidersModel.find({ status: "activeRider" })
@@ -109,7 +130,7 @@ const getActiveRiders = async (req, res, next) => {
 
 const getNotDeletedRiders = async (req, res, next) => {
     try {
-        const riders = await RidersModel.find({ status: { $in: ["rider", "activeRider"] } })
+        const riders = await RidersModel.find({ status: { $in: ["rider", "activeRider"] } }).select('emailAddress ridersName status')
         res.json(riders)
     }
     catch (err) {
@@ -119,7 +140,7 @@ const getNotDeletedRiders = async (req, res, next) => {
 
 const getDeletedRiders = async (req, res, next) => {
     try {
-        const riders = await RidersModel.find({ status: "BlockedRider" })
+        const riders = await RidersModel.find({ status: "BlockedRider" }).select('emailAddress ridersName status')
         res.json(riders)
     }
     catch (err) {
@@ -150,7 +171,7 @@ const getRidersByToken = async (req, res, next) => {
         const token = authHeader.split(' ')[1];
         let ridersId;
         try {
-            const decoded = jwt.verify(token, "super-duper-hassan-secret-dont-share");
+            const decoded = jwt.verify(token, jwtTokenSecret);
             ridersId = decoded.ridersId;
         } catch (err) {
             if (err.name === 'TokenExpiredError') {
@@ -258,6 +279,10 @@ exports.updateRidersById = updateRidersById;
 
 exports.signup = signup;
 exports.getRiders = getRiders;
+
+exports.getRidersLength = getRidersLength;
+
+exports.getRidersNames = getRidersNames;
 
 exports.getActiveRiders = getActiveRiders;
 exports.getNotDeletedRiders = getNotDeletedRiders;

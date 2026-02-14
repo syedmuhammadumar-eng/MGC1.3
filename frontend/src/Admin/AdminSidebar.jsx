@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from '../assets/MGC.png';
 
@@ -33,7 +34,7 @@ export default function AdminSidebar() {
     }
 
     // Create socket connection
-    const newSocket = io('http://localhost:3000', {
+    const newSocket = io(`${link}`, {
       transports: ['websocket', 'polling'],
       auth: {
         token: token
@@ -80,20 +81,7 @@ export default function AdminSidebar() {
 
   const menuItems = [
     { path: "/admin", label: "Admin Stats", iconClass: "fas fa-tachometer-alt" },
-    { path: "/admin/riders", label: "Riders", iconClass: "fas fa-motorcycle" },
-    { path: "/admin/deleted-riders", label: "Deleted Riders", iconClass: "fa-solid fa-trash" },
-    { path: "/admin/vendors-management", label: "Vendors Mangament", iconClass: "fa-solid fa-truck" },
-    { path: "/admin/unapproved-users", label: "Unapproved Users", iconClass: "fas fa-user-xmark", notifName: "newUserNotif", notif: newUserNotif, queryKey: "unapprovedUsers" },
-    { path: "/admin/users", label: "Users", iconClass: "fas fa-users" },
-    { path: "/admin/unassigned-orders", label: "Assign For Pickup", iconClass: "fas fa-box-open", notifName: "AssignPickNotif", notif: AssignPickNotif, queryKey: "unassignedOrders" },
-    // { path: "/admin/vandor-cancelled", label: "Cancelled from pickup", iconClass: "fas fa-cancel" },
-    { path: "/admin/orders", label: "Orders", iconClass: "fas fa-clipboard-list" },
-    { path: "/admin/warehouse-scanner", label: "Warehouse Scanner", iconClass: "fas fa-warehouse" },
-    { path: "/admin/order-at-warehouse", label: "Orders at Warehouse", iconClass: "fas fa-boxes" },
-    { path: "/admin/return-management", label: "Delivery Management", iconClass: "fas fa-undo-alt" },
-    { path: "/admin/cancel-management", label: "Cancel Management", iconClass: "fas fa-x" },
-    // { path: "/admin/invoice-report", label: "Invoice Reports", iconClass: "fas fa-file-invoice" },
-    { path: "/admin/accounts", label: "Accounts", iconClass: "fa-solid fa-book" },
+    { path: "/admin/employe-management", label: "Employe Management", iconClass: "fa-brands fa-atlassian" },
   ];
 
   return (

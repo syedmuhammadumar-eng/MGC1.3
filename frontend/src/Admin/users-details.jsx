@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import logo from '../assets/MGC.png';
 import { useEffect } from "react";
 import { useState } from "react";
@@ -20,10 +21,10 @@ export default function UsersDetail() {
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/');
-            return;
+            return [];
         }
 
-        const data = await fetch(`http://localhost:3000/users/${uid}`, {
+        const data = await fetch(`${link}/users/${uid}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -33,12 +34,12 @@ export default function UsersDetail() {
         if (data?.status === 401) {
             localStorage.removeItem('token');
             navigate('/');
-            return;
+            return [];
         }
         if (data?.status === 403) {
             // Not authorized (not admin)
             navigate('/');
-            return;
+            return [];
         }
         if (!data?.ok) {
             throw new Error(`HTTP error! status: ${data.status}`);
@@ -54,70 +55,82 @@ export default function UsersDetail() {
     })
 
 
-    const [ordersData, setOrdersData] = useState()
-    useEffect(() => {
-        async function a() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                navigate('/');
-                return;
-            }
-
-            const data = await fetch(`http://localhost:3000/orders/admin/user/${uid}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-            })
-            if (data?.status === 401) {
-                localStorage.removeItem('token');
-                navigate('/');
-                return;
-            }
-            if (data?.status === 403) {
-                // Not authorized (not admin)
-                navigate('/');
-                return;
-            }
-            if (!data?.ok) {
-                throw new Error(`HTTP error! status: ${data.status}`);
-            }
-            const info = await data.json()
-            setOrdersData(info?.order)
-        }
-        a();
-    }, [])
-
-    const [filterStartDate, setFilterStartDate] = useState("")
-    const [filterEndDate, setFilterEndDate] = useState("")
-
-    const filteredOrders = ordersData?.filter(order => {
-        if (!filterStartDate && !filterEndDate) {
-            return true;
-        }
-        const orderDate = new Date(order?.OrderDate);
-        const startDate = filterStartDate ? new Date(filterStartDate) : null;
-        const endDate = filterEndDate ? new Date(filterEndDate) : null;
-
-        // Adjust endDate to end of day (11:59:59 PM)
-        if (endDate) {
-            endDate.setHours(23, 59, 59, 999);
-        }
-        // Check if order date is within range
-        if (startDate && endDate) {
-            // Both dates selected: order must be between start and end
-            return orderDate >= startDate && orderDate <= endDate;
-        } else if (startDate && !endDate) {
-            // Only start date selected: order must be on or after start
-            return orderDate >= startDate;
-        } else if (!startDate && endDate) {
-            // Only end date selected: order must be on or before end
-            return orderDate <= endDate;
+    // const [ordersData, setOrdersData] = useState()
+    async function ordersDataLogic() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/');
+            return [];
         }
 
-        return true;
+        const data = await fetch(`${link}/orders/admin/user/${uid}?filterStartDate=${filterStartDate}&filterEndDate=${filterEndDate}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+        })
+        if (data?.status === 401) {
+            localStorage.removeItem('token');
+            navigate('/');
+            return [];
+        }
+        if (data?.status === 403) {
+            // Not authorized (not admin)
+            navigate('/');
+            return [];
+        }
+        if (!data?.ok) {
+            throw new Error(`HTTP error! status: ${data.status}`);
+        }
+        const info = await data.json()
+        return info?.order || [];
+    }
+    const { data: ordersData = [], isLoading: ordersLoading, error: ordersError } = useQuery({
+        queryKey: ['ordersdata-userdetails'],
+        queryFn: ordersDataLogic,
+        retry: 1,
+        refetchOnWindowFocus: true,
     })
+
+    const getYesterdayDate = () => {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        return yesterday.toISOString().split('T')[0];
+    };
+    const getTodayDate = () => {
+        const today = new Date().toISOString().split('T')[0];
+        return today;
+    }
+    const [filterStartDate, setFilterStartDate] = useState(getYesterdayDate())
+    const [filterEndDate, setFilterEndDate] = useState(getTodayDate())
+
+    // const filteredOrders = ordersData?.filter(order => {
+    //     if (!filterStartDate && !filterEndDate) {
+    //         return true;
+    //     }
+    //     const orderDate = new Date(order?.OrderDate);
+    //     const startDate = filterStartDate ? new Date(filterStartDate) : null;
+    //     const endDate = filterEndDate ? new Date(filterEndDate) : null;
+
+    //     // Adjust endDate to end of day (11:59:59 PM)
+    //     if (endDate) {
+    //         endDate.setHours(23, 59, 59, 999);
+    //     }
+    //     // Check if order date is within range
+    //     if (startDate && endDate) {
+    //         // Both dates selected: order must be between start and end
+    //         return orderDate >= startDate && orderDate <= endDate;
+    //     } else if (startDate && !endDate) {
+    //         // Only start date selected: order must be on or after start
+    //         return orderDate >= startDate;
+    //     } else if (!startDate && endDate) {
+    //         // Only end date selected: order must be on or before end
+    //         return orderDate <= endDate;
+    //     }
+
+    //     return true;
+    // })
 
 
     const loadImage = (url) =>
@@ -203,7 +216,7 @@ export default function UsersDetail() {
             yPosition += 10;
 
             // Orders Table
-            if (filteredOrders.length > 0) {
+            if (ordersData.length > 0) {
                 pdf.setFontSize(14);
                 pdf.text('Orders Summary', margin, yPosition);
                 yPosition += 10;
@@ -227,7 +240,7 @@ export default function UsersDetail() {
                 pdf.line(margin, yPosition - 3, pageWidth - margin, yPosition - 3);
 
                 // Add orders with automatic pagination
-                filteredOrders.forEach((order, index) => {
+                ordersData.forEach((order, index) => {
                     // Check if we need new page
                     if (yPosition > pageHeight - margin) {
                         pdf.addPage();
@@ -266,7 +279,7 @@ export default function UsersDetail() {
                 pdf.setFontSize(9);
 
                 // List all tracking IDs - NO WRAPPING
-                filteredOrders.forEach((order, index) => {
+                ordersData.forEach((order, index) => {
                     if (yPosition > pageHeight - margin) {
                         pdf.addPage();
                         yPosition = margin;
@@ -278,10 +291,10 @@ export default function UsersDetail() {
 
                 // Add total
                 yPosition += 10;
-                const totalAmount = filteredOrders.reduce((sum, order) => sum + (parseFloat(order?.OrderAmount) || 0), 0);
+                const totalAmount = ordersData.reduce((sum, order) => sum + (parseFloat(order?.OrderAmount) || 0), 0);
                 pdf.setFontSize(10);
                 pdf.text(`Total Amount: ${totalAmount.toFixed(2)}`, margin, yPosition);
-                pdf.text(`Total Orders: ${filteredOrders.length}`, pageWidth - margin - 60, yPosition, { align: 'right' });
+                pdf.text(`Total Orders: ${ordersData.length}`, pageWidth - margin - 60, yPosition, { align: 'right' });
             }
 
             // Save PDF
@@ -296,7 +309,7 @@ export default function UsersDetail() {
 
     async function blockUserLogic({ id, status }) {
         try {
-            const response = await fetch(`http://localhost:3000/users/${id}`, {
+            const response = await fetch(`${link}/users/${id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -349,13 +362,39 @@ export default function UsersDetail() {
     }
     const isBlocking = blockUserMutation.isPending;
 
+    useEffect(() => {
+        queryClient.invalidateQueries({ queryKey: ['ordersdata-userdetails'] });
+    }, [filterStartDate, filterEndDate]);
+
+    // Loading state
+    if (ordersLoading) {
+        return (
+            <div className="overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-2 justify-center items-center w-7/8! sm:w-3/4 h-screen">
+                <div className="text-center">
+                    <p className="text-lg">Loading data...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Error state
+    if (ordersError) {
+        return (
+            <div className="overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-2 justify-center items-center w-7/8! sm:w-3/4 h-screen">
+                <div className="text-center text-red-600">
+                    <p className="text-lg">Error loading data: {ordersError?.message}</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             {
                 userData?.map((a) => (
                     <>
                         <div className="overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-4 justify-start items-start w-7/8! sm:w-3/4 h-screen">
-                            <div className="w-full flex gap-2">
+                            <div className="w-full flex flex-col md:flex-row gap-2">
                                 <div className="flex-1 rounded-lg p-4 text-white bg-linear-to-r from-gray-600 to-gray-800">
                                     <div>
                                         <h4>Sender Name :</h4>
@@ -371,7 +410,7 @@ export default function UsersDetail() {
                                     </div>
                                     <div>
                                         <h4>No of Orders :</h4>
-                                        <h5>{filteredOrders?.length}</h5>
+                                        <h5>{ordersData?.length}</h5>
                                     </div>
                                     <div>
                                         <button disabled={isBlocking} style={{ backgroundColor: a?.status !== "Blocked" ? "red" : "blue" }} className='bg-red-700 rounded p-2' onClick={() => {
@@ -411,7 +450,7 @@ export default function UsersDetail() {
                                 </div>
                             </div>
                             <div className="w-full flex flex-col gap-2">
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-col md:flex-row items-center justify-between">
                                     <h2>{filterStartDate !== "" || filterEndDate !== "" ? filterStartDate + " to " + filterEndDate : "All Orders"}</h2>
                                     <button onClick={generatePDF} className="bg-green-600 rounded text-white p-2">Generate PDF</button>
                                     <div className="flex items-center gap-2">
@@ -442,7 +481,7 @@ export default function UsersDetail() {
                                         </thead>
                                         <tbody>
                                             {
-                                                filteredOrders?.map((a) => (
+                                                ordersData?.map((a) => (
                                                     <tr>
                                                         <td className="p-4 text-center text-nowrap">{a?.creatorName}</td>
                                                         <td className="p-4 text-center text-nowrap">{a?.CustomerName}</td>

@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useContext, useEffect } from 'react'
@@ -21,7 +22,7 @@ export default function FormLoader() {
             });
             return [];
         }
-        const data = await fetch('http://localhost:3000/orders/loader-auth-check', {
+        const data = await fetch(`${link}/orders/loader-auth-check`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

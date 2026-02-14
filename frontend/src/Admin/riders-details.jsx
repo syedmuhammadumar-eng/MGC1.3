@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import logo from '../assets/MGC.png';
 import { useCallback, useEffect, useRef } from "react";
 import { useState } from "react";
@@ -12,6 +13,11 @@ import 'react-toastify/dist/ReactToastify.css';
 export default function RidersDetails() {
     const { rid } = useParams()
     // const [ridersData, setRidersData] = useState()
+
+
+    // -------------- states for pages -------------------------------
+    const [page, setPage] = useState(0)
+
 
     const queryClient = useQueryClient()
 
@@ -29,7 +35,7 @@ export default function RidersDetails() {
             return;
         }
 
-        const data = await fetch(`http://localhost:3000/riders/${rid}`, {
+        const data = await fetch(`${link}/riders/${rid}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -63,200 +69,228 @@ export default function RidersDetails() {
 
 
     // --------------------------------Getting Orders--------------------------------
-    // const data = await fetch(`http://localhost:3000/orders/rider/${rid}`, {
+    // const data = await fetch(`${link}/orders/rider/${rid}`, {
 
-    const [pickupOrdersData, setPickupOrdersData] = useState()
-    useEffect(() => {
-        async function a() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                navigate('/');
-                return;
-            }
-            const data = await fetch(`http://localhost:3000/orders/rider/pickup/${rid}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-            })
-            if (data?.status === 401) {
-                localStorage.removeItem('token');
-                navigate('/');
-                return;
-            }
-            if (data?.status === 403) {
-                // Not authorized (not admin)
-                navigate('/');
-                return;
-            }
-            if (!data?.ok) {
-                throw new Error(`HTTP error! status: ${data.status}`);
-            }
-            const info = await data.json()
-            // console.log(info)
-            setPickupOrdersData(info?.orders)
+    // const [deliveryOrdersData, setDeliveryOrdersData] = useState()
+    async function deliveryOrdersDataLogic() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/');
+            return;
         }
-        a();
-    }, [])
+        const data = await fetch(`${link}/orders/rider/delivery/${rid}?filterStartDate=${filterStartDateDelivery}&filterEndDate=${filterEndDateDelivery}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+        })
+        if (data?.status === 401) {
+            localStorage.removeItem('token');
+            navigate('/');
+            return;
+        }
+        if (data?.status === 403) {
+            // Not authorized (not admin)
+            navigate('/');
+            return;
+        }
+        if (!data?.ok) {
+            throw new Error(`HTTP error! status: ${data.status}`);
+        }
+        const info = await data.json()
+        // console.log(info)
+        return info?.orders;
+    }
+    const { data: deliveryOrdersData, isLoading: ordersLoading, error: ordersError } = useQuery({
+        queryKey: ['ordersdata-delivery'],
+        queryFn: deliveryOrdersDataLogic,
+        retry: 1,
+        refetchOnWindowFocus: true,
+    })
 
-    const [deliveryOrdersData, setDeliveryOrdersData] = useState()
-    useEffect(() => {
-        async function a() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                navigate('/');
-                return;
-            }
-            const data = await fetch(`http://localhost:3000/orders/rider/delivery/${rid}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-            })
-            if (data?.status === 401) {
-                localStorage.removeItem('token');
-                navigate('/');
-                return;
-            }
-            if (data?.status === 403) {
-                // Not authorized (not admin)
-                navigate('/');
-                return;
-            }
-            if (!data?.ok) {
-                throw new Error(`HTTP error! status: ${data.status}`);
-            }
-            const info = await data.json()
-            // console.log(info)
-            setDeliveryOrdersData(info?.orders)
-        }
-        a();
-    }, [])
 
-    const [returnOrdersData, setReturnOrdersData] = useState()
-    useEffect(() => {
-        async function a() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                navigate('/');
-                return;
-            }
-            const data = await fetch(`http://localhost:3000/orders/rider/return/${rid}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-            })
-            if (data?.status === 401) {
-                localStorage.removeItem('token');
-                navigate('/');
-                return;
-            }
-            if (data?.status === 403) {
-                // Not authorized (not admin)
-                navigate('/');
-                return;
-            }
-            if (!data?.ok) {
-                throw new Error(`HTTP error! status: ${data.status}`);
-            }
-            const info = await data.json()
-            // console.log(info)
-            setReturnOrdersData(info?.orders)
+    // const [pickupOrdersData, setPickupOrdersData] = useState()
+    async function callPickupData() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/');
+            return;
         }
-        a();
-    }, [])
+        const data = await fetch(`${link}/orders/rider/pickup/${rid}?filterStartDate=${filterStartDatePickup}&filterEndDate=${filterEndDatePickup}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+        })
+        if (data?.status === 401) {
+            localStorage.removeItem('token');
+            navigate('/');
+            return;
+        }
+        if (data?.status === 403) {
+            // Not authorized (not admin)
+            navigate('/');
+            return;
+        }
+        if (!data?.ok) {
+            throw new Error(`HTTP error! status: ${data.status}`);
+        }
+        const info = await data.json()
+        // console.log(info)
+        return info?.orders;
+    }
+    const { data: pickupOrdersData, isLoading: pickupLoading } = useQuery({
+        queryKey: ['pickupOrdersData'],
+        queryFn: () => callPickupData(),
+        enabled: page === 1,
+        retry: 1,
+        refetchOnWindowFocus: true,
+    });
+
+
+    // const [returnOrdersData, setReturnOrdersData] = useState()
+    async function callReturnData() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/');
+            return;
+        }
+        const data = await fetch(`${link}/orders/rider/return/${rid}?filterStartDate=${filterStartDateReturn}&filterEndDate=${filterEndDateReturn}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+        })
+        if (data?.status === 401) {
+            localStorage.removeItem('token');
+            navigate('/');
+            return;
+        }
+        if (data?.status === 403) {
+            // Not authorized (not admin)
+            navigate('/');
+            return;
+        }
+        if (!data?.ok) {
+            throw new Error(`HTTP error! status: ${data.status}`);
+        }
+        const info = await data.json()
+        // console.log(info)
+        return info?.orders;
+    }
+    const { data: returnOrdersData, isLoading: returnLoading } = useQuery({
+        queryKey: ['returnOrdersData'],
+        queryFn: () => callReturnData(),
+        enabled: page === 2,
+        retry: 1,
+        refetchOnWindowFocus: true,
+    });
 
 
 
 
     // ------------------Filtering---------------------------------------
-    const [filterStartDateDelivery, setFilterStartDateDelivery] = useState("")
-    const [filterEndDateDelivery, setFilterEndDateDelivery] = useState("")
-    const filteredOrdersDelivery = deliveryOrdersData?.filter(order => {
-        if (!filterStartDateDelivery && !filterEndDateDelivery) {
-            return true;
-        }
-        const orderDateDelivery = new Date(order?.OrderDate);
-        const startDateDelivery = filterStartDateDelivery ? new Date(filterStartDateDelivery) : null;
-        const endDateDelivery = filterEndDateDelivery ? new Date(filterEndDateDelivery) : null;
+    const getYesterdayDate = () => {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        return yesterday.toISOString().split('T')[0];
+    };
+    const getTodayDate = () => {
+        const today = new Date().toISOString().split('T')[0];
+        return today;
+    }
+    const [filterStartDateDelivery, setFilterStartDateDelivery] = useState(getYesterdayDate())
+    const [filterEndDateDelivery, setFilterEndDateDelivery] = useState(getTodayDate())
 
-        // Adjust endDate to end of day (11:59:59 PM)
-        if (endDateDelivery) {
-            endDateDelivery.setHours(23, 59, 59, 999);
-        }
-        // Check if order date is within range
-        if (startDateDelivery && endDateDelivery) {
-            // Both dates selected: order must be between start and end
-            return orderDateDelivery >= startDateDelivery && orderDateDelivery <= endDateDelivery;
-        } else if (startDateDelivery && !endDateDelivery) {
-            // Only start date selected: order must be on or after start
-            return orderDateDelivery >= startDateDelivery;
-        } else if (!startDateDelivery && endDateDelivery) {
-            // Only end date selected: order must be on or before end
-            return orderDateDelivery <= endDateDelivery;
-        }
-        return true;
-    })
+    const [filterStartDatePickup, setFilterStartDatePickup] = useState(getYesterdayDate())
+    const [filterEndDatePickup, setFilterEndDatePickup] = useState(getTodayDate())
 
-    const [filterStartDatePickup, setFilterStartDatePickup] = useState("")
-    const [filterEndDatePickup, setFilterEndDatePickup] = useState("")
-    const filteredOrdersPickup = pickupOrdersData?.filter(order => {
-        if (!filterStartDatePickup && !filterEndDatePickup) {
-            return true;
-        }
-        const orderDatePickup = new Date(order?.OrderDatePickup);
-        const startDatePickup = filterStartDatePickup ? new Date(filterStartDatePickup) : null;
-        const endDatePickup = filterEndDatePickup ? new Date(filterEndDatePickup) : null;
+    const [filterStartDateReturn, setFilterStartDateReturn] = useState(getYesterdayDate())
+    const [filterEndDateReturn, setFilterEndDateReturn] = useState(getTodayDate())
 
-        // Adjust endDate to end of day (11:59:59 PM)
-        if (endDatePickup) {
-            endDatePickup.setHours(23, 59, 59, 999);
-        }
-        // Check if order date is within range
-        if (startDatePickup && endDatePickup) {
-            // Both dates selected: order must be between start and end
-            return orderDatePickup >= startDatePickup && orderDatePickup <= endDatePickup;
-        } else if (startDatePickup && !endDatePickup) {
-            // Only start date selected: order must be on or after start
-            return orderDatePickup >= startDatePickup;
-        } else if (!startDatePickup && endDatePickup) {
-            // Only end date selected: order must be on or before end
-            return orderDatePickup <= endDatePickup;
-        }
-        return true;
-    })
 
-    const [filterStartDateReturn, setFilterStartDateReturn] = useState("")
-    const [filterEndDateReturn, setFilterEndDateReturn] = useState("")
-    const filteredOrdersReturn = returnOrdersData?.filter(order => {
-        if (!filterStartDateReturn && !filterEndDateReturn) {
-            return true;
-        }
-        const orderDateReturn = new Date(order?.OrderDate);
-        const startDateReturn = filterStartDateReturn ? new Date(filterStartDateReturn) : null;
-        const endDateReturn = filterEndDateReturn ? new Date(filterEndDateReturn) : null;
+    // const filteredOrdersDelivery = deliveryOrdersData?.filter(order => {
+    //     if (!filterStartDateDelivery && !filterEndDateDelivery) {
+    //         return true;
+    //     }
+    //     const orderDateDelivery = new Date(order?.RiderDeliveredDate);
+    //     const startDateDelivery = filterStartDateDelivery ? new Date(filterStartDateDelivery) : null;
+    //     const endDateDelivery = filterEndDateDelivery ? new Date(filterEndDateDelivery) : null;
 
-        // Adjust endDate to end of day (11:59:59 PM)
-        if (endDateReturn) {
-            endDateReturn.setHours(23, 59, 59, 999);
-        }
-        // Check if order date is within range
-        if (startDateReturn && endDateReturn) {
-            // Both dates selected: order must be between start and end
-            return orderDateReturn >= startDateReturn && orderDateReturn <= endDateReturn;
-        } else if (startDateReturn && !endDateReturn) {
-            // Only start date selected: order must be on or after start
-            return orderDateReturn >= startDateReturn;
-        } else if (!startDateReturn && endDateReturn) {
-            // Only end date selected: order must be on or before end
-            return orderDateReturn <= endDateReturn;
-        }
-        return true;
-    })
+    //     // Adjust endDate to end of day (11:59:59 PM)
+    //     if (endDateDelivery) {
+    //         endDateDelivery.setHours(23, 59, 59, 999);
+    //     }
+    //     // Check if order date is within range
+    //     if (startDateDelivery && endDateDelivery) {
+    //         // Both dates selected: order must be between start and end
+    //         return orderDateDelivery >= startDateDelivery && orderDateDelivery <= endDateDelivery;
+    //     } else if (startDateDelivery && !endDateDelivery) {
+    //         // Only start date selected: order must be on or after start
+    //         return orderDateDelivery >= startDateDelivery;
+    //     } else if (!startDateDelivery && endDateDelivery) {
+    //         // Only end date selected: order must be on or before end
+    //         return orderDateDelivery <= endDateDelivery;
+    //     }
+    //     return true;
+    // })
+
+    
+    // const filteredOrdersPickup = pickupOrdersData?.filter(order => {
+    //     if (!filterStartDatePickup && !filterEndDatePickup) {
+    //         return true;
+    //     }
+    //     const orderDatePickup = new Date(order?.RiderAssignedDate);
+    //     const startDatePickup = filterStartDatePickup ? new Date(filterStartDatePickup) : null;
+    //     const endDatePickup = filterEndDatePickup ? new Date(filterEndDatePickup) : null;
+
+    //     // Adjust endDate to end of day (11:59:59 PM)
+    //     if (endDatePickup) {
+    //         endDatePickup.setHours(23, 59, 59, 999);
+    //     }
+    //     // Check if order date is within range
+    //     if (startDatePickup && endDatePickup) {
+    //         // Both dates selected: order must be between start and end
+    //         return orderDatePickup >= startDatePickup && orderDatePickup <= endDatePickup;
+    //     } else if (startDatePickup && !endDatePickup) {
+    //         // Only start date selected: order must be on or after start
+    //         return orderDatePickup >= startDatePickup;
+    //     } else if (!startDatePickup && endDatePickup) {
+    //         // Only end date selected: order must be on or before end
+    //         return orderDatePickup <= endDatePickup;
+    //     }
+    //     return true;
+    // })
+
+    
+    // const filteredOrdersReturn = returnOrdersData?.filter(order => {
+    //     if (!filterStartDateReturn && !filterEndDateReturn) {
+    //         return true;
+    //     }
+    //     const orderDateReturn = new Date(order?.RiderReturnDate);
+    //     const startDateReturn = filterStartDateReturn ? new Date(filterStartDateReturn) : null;
+    //     const endDateReturn = filterEndDateReturn ? new Date(filterEndDateReturn) : null;
+
+    //     // Adjust endDate to end of day (11:59:59 PM)
+    //     if (endDateReturn) {
+    //         endDateReturn.setHours(23, 59, 59, 999);
+    //     }
+    //     // Check if order date is within range
+    //     if (startDateReturn && endDateReturn) {
+    //         // Both dates selected: order must be between start and end
+    //         return orderDateReturn >= startDateReturn && orderDateReturn <= endDateReturn;
+    //     } else if (startDateReturn && !endDateReturn) {
+    //         // Only start date selected: order must be on or after start
+    //         return orderDateReturn >= startDateReturn;
+    //     } else if (!startDateReturn && endDateReturn) {
+    //         // Only end date selected: order must be on or before end
+    //         return orderDateReturn <= endDateReturn;
+    //     }
+    //     return true;
+    // })
 
 
 
@@ -344,7 +378,7 @@ export default function RidersDetails() {
             yPosition += 10;
 
             // Orders Table - NO WRAPPING
-            if (filteredOrdersDelivery && filteredOrdersDelivery.length > 0) {
+            if (deliveryOrdersData && deliveryOrdersData.length > 0) {
                 pdf.setFontSize(14);
                 pdf.text('Orders Summary', margin, yPosition);
                 yPosition += 10;
@@ -370,7 +404,7 @@ export default function RidersDetails() {
                 yPosition += 3;
 
                 // Add orders with automatic pagination
-                filteredOrdersDelivery.forEach((order, index) => {
+                deliveryOrdersData.forEach((order, index) => {
                     // Check if we need new page
                     if (yPosition > pageHeight - margin) {
                         pdf.addPage();
@@ -412,7 +446,7 @@ export default function RidersDetails() {
                 pdf.setFontSize(9);
 
                 // List all tracking IDs - NO WRAPPING
-                filteredOrdersDelivery.forEach((order, index) => {
+                deliveryOrdersData.forEach((order, index) => {
                     if (yPosition > pageHeight - margin) {
                         pdf.addPage();
                         yPosition = margin;
@@ -424,10 +458,10 @@ export default function RidersDetails() {
 
                 // Add total
                 yPosition += 10;
-                const totalAmount = filteredOrdersDelivery.reduce((sum, order) => sum + (parseFloat(order?.OrderAmount) || 0), 0);
+                const totalAmount = deliveryOrdersData.reduce((sum, order) => sum + (parseFloat(order?.OrderAmount) || 0), 0);
                 pdf.setFontSize(10);
                 pdf.text(`Total Amount: ${totalAmount.toFixed(2)}`, margin, yPosition);
-                pdf.text(`Total Orders: ${filteredOrdersDelivery.length}`, pageWidth - margin - 60, yPosition, { align: 'right' });
+                pdf.text(`Total Orders: ${deliveryOrdersData.length}`, pageWidth - margin - 60, yPosition, { align: 'right' });
             } else {
                 // No orders message
                 pdf.setFontSize(12);
@@ -518,7 +552,7 @@ export default function RidersDetails() {
             yPosition += 10;
 
             // Orders Table - NO WRAPPING
-            if (filteredOrdersPickup && filteredOrdersPickup.length > 0) {
+            if (pickupOrdersData && pickupOrdersData.length > 0) {
                 pdf.setFontSize(14);
                 pdf.text('Orders Summary', margin, yPosition);
                 yPosition += 10;
@@ -544,7 +578,7 @@ export default function RidersDetails() {
                 yPosition += 3;
 
                 // Add orders with automatic pagination
-                filteredOrdersPickup.forEach((order, index) => {
+                pickupOrdersData.forEach((order, index) => {
                     // Check if we need new page
                     if (yPosition > pageHeight - margin) {
                         pdf.addPage();
@@ -586,7 +620,7 @@ export default function RidersDetails() {
                 pdf.setFontSize(9);
 
                 // List all tracking IDs - NO WRAPPING
-                filteredOrdersPickup.forEach((order, index) => {
+                pickupOrdersData.forEach((order, index) => {
                     if (yPosition > pageHeight - margin) {
                         pdf.addPage();
                         yPosition = margin;
@@ -598,10 +632,10 @@ export default function RidersDetails() {
 
                 // Add total
                 yPosition += 10;
-                const totalAmount = filteredOrdersPickup.reduce((sum, order) => sum + (parseFloat(order?.OrderAmount) || 0), 0);
+                const totalAmount = pickupOrdersData.reduce((sum, order) => sum + (parseFloat(order?.OrderAmount) || 0), 0);
                 pdf.setFontSize(10);
                 pdf.text(`Total Amount: ${totalAmount.toFixed(2)}`, margin, yPosition);
-                pdf.text(`Total Orders: ${filteredOrdersPickup.length}`, pageWidth - margin - 60, yPosition, { align: 'right' });
+                pdf.text(`Total Orders: ${pickupOrdersData.length}`, pageWidth - margin - 60, yPosition, { align: 'right' });
             } else {
                 // No orders message
                 pdf.setFontSize(12);
@@ -692,7 +726,7 @@ export default function RidersDetails() {
             yPosition += 10;
 
             // Orders Table - NO WRAPPING
-            if (filteredOrdersReturn && filteredOrdersReturn.length > 0) {
+            if (returnOrdersData && returnOrdersData.length > 0) {
                 pdf.setFontSize(14);
                 pdf.text('Orders Summary', margin, yPosition);
                 yPosition += 10;
@@ -718,7 +752,7 @@ export default function RidersDetails() {
                 yPosition += 3;
 
                 // Add orders with automatic pagination
-                filteredOrdersReturn.forEach((order, index) => {
+                returnOrdersData.forEach((order, index) => {
                     // Check if we need new page
                     if (yPosition > pageHeight - margin) {
                         pdf.addPage();
@@ -760,7 +794,7 @@ export default function RidersDetails() {
                 pdf.setFontSize(9);
 
                 // List all tracking IDs - NO WRAPPING
-                filteredOrdersReturn.forEach((order, index) => {
+                returnOrdersData.forEach((order, index) => {
                     if (yPosition > pageHeight - margin) {
                         pdf.addPage();
                         yPosition = margin;
@@ -772,10 +806,10 @@ export default function RidersDetails() {
 
                 // Add total
                 yPosition += 10;
-                const totalAmount = filteredOrdersReturn.reduce((sum, order) => sum + (parseFloat(order?.OrderAmount) || 0), 0);
+                const totalAmount = returnOrdersData.reduce((sum, order) => sum + (parseFloat(order?.OrderAmount) || 0), 0);
                 pdf.setFontSize(10);
                 pdf.text(`Total Amount: ${totalAmount.toFixed(2)}`, margin, yPosition);
-                pdf.text(`Total Orders: ${filteredOrdersReturn.length}`, pageWidth - margin - 60, yPosition, { align: 'right' });
+                pdf.text(`Total Orders: ${returnOrdersData.length}`, pageWidth - margin - 60, yPosition, { align: 'right' });
             } else {
                 // No orders message
                 pdf.setFontSize(12);
@@ -808,7 +842,7 @@ export default function RidersDetails() {
         setFormData({ ...formData, [name]: value });
     };
     async function addRiderLogic() {
-        const data = await fetch(`http://localhost:3000/riders/${rid}`, {
+        const data = await fetch(`${link}/riders/${rid}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -854,7 +888,7 @@ export default function RidersDetails() {
                 cnic: "",
             });
             setOpenMenuAddUser(false);
-            queryClient.invalidateQueries({ queryKey: ['riders'] });
+            queryClient.invalidateQueries({ queryKey: ['riders-details'] });
         },
         onError: (error) => {
             console.error('Error:', error);
@@ -889,7 +923,7 @@ export default function RidersDetails() {
 
     async function blockUserLogic({ id, status }) {
         try {
-            const response = await fetch(`http://localhost:3000/riders/${id}`, {
+            const response = await fetch(`${link}/riders/${id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -923,7 +957,7 @@ export default function RidersDetails() {
         mutationFn: blockUserLogic,
         onSuccess: (data, variables) => {
             console.log(data)
-            queryClient.invalidateQueries({ queryKey: ['riders'] });
+            queryClient.invalidateQueries({ queryKey: ['riders-details'] });
             navigate('/admin/riders')
         },
         onError: (error) => {
@@ -995,8 +1029,46 @@ export default function RidersDetails() {
     }, [])
 
 
-    // -------------- states for pages -------------------------------
-    const [page, setPage] = useState(0)
+    // useEffect to refetch when date filters change
+    useEffect(() => {
+        if (page === 1) {
+            queryClient.invalidateQueries({ queryKey: ['pickupOrdersData'] });
+        }
+    }, [filterStartDatePickup, filterEndDatePickup]);
+
+    useEffect(() => {
+        if (page === 2) {
+            queryClient.invalidateQueries({ queryKey: ['returnOrdersData'] });
+        }
+    }, [filterStartDateReturn, filterEndDateReturn]);
+
+    useEffect(() => {
+        queryClient.invalidateQueries({ queryKey: ['ordersdata-delivery'] });
+    }, [filterStartDateDelivery, filterEndDateDelivery]);
+
+
+
+    // Loading state
+    if (ordersLoading) {
+        return (
+            <div className="overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-2 justify-center items-center w-7/8! sm:w-3/4 h-screen">
+                <div className="text-center">
+                    <p className="text-lg">Loading data...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Error state
+    if (ordersError) {
+        return (
+            <div className="overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-2 justify-center items-center w-7/8! sm:w-3/4 h-screen">
+                <div className="text-center text-red-600">
+                    <p className="text-lg">Error loading data: {ordersError?.message}</p>
+                </div>
+            </div>
+        );
+    }
 
 
     return (
@@ -1006,7 +1078,7 @@ export default function RidersDetails() {
                     <>
                         <ToastContainer />
                         <div key={a?._id} className="overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-4 justify-start items-start w-7/8! sm:w-3/4 h-screen">
-                            <div className="w-full flex gap-2">
+                            <div className="w-full flex flex-col md:flex-row gap-2">
                                 <div className="flex-1 rounded-lg p-4 text-white bg-linear-to-r from-gray-600 to-gray-800">
                                     <div>
                                         <h4>Rider Name :</h4>
@@ -1154,10 +1226,10 @@ export default function RidersDetails() {
                                 <button onClick={() => setPage(0)} className={`font-bold text-lg! w-1/3! ${page === 0 ? "bg-[#162A59]" : "bg-[#1E3A8A]"} py-2 rounded`}>
                                     Delivered
                                 </button>
-                                <button onClick={() => setPage(1)} className={`font-bold text-lg! w-1/3! ${page === 1 ? "bg-[#162A59]" : "bg-[#1E3A8A]"} py-2 rounded`}>
+                                <button onClick={() => { setPage(1), callPickupData() }} className={`font-bold text-lg! w-1/3! ${page === 1 ? "bg-[#162A59]" : "bg-[#1E3A8A]"} py-2 rounded`}>
                                     Pickup
                                 </button>
-                                <button onClick={() => setPage(2)} className={`font-bold text-lg! w-1/3! ${page === 2 ? "bg-[#162A59]" : "bg-[#1E3A8A]"} py-2 rounded`}>
+                                <button onClick={() => { setPage(2), callReturnData() }} className={`font-bold text-lg! w-1/3! ${page === 2 ? "bg-[#162A59]" : "bg-[#1E3A8A]"} py-2 rounded`}>
                                     Return
                                 </button>
                             </div>
@@ -1166,15 +1238,15 @@ export default function RidersDetails() {
                                 page === 0
                                     ?
                                     <div className="w-full flex flex-col gap-2">
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex flex-col md:flex-row items-center justify-between">
                                             <h2 className="text-2xl!">Delivered {filterStartDateDelivery !== "" || filterEndDateDelivery !== "" ? filterStartDateDelivery + " to " + filterEndDateDelivery : "All Orders"}</h2>
                                             <button onClick={generatePDFDelivery} className="bg-green-600 rounded text-white p-2">Generate PDF</button>
                                             <div className="flex items-center gap-2">
                                                 <label className="text-red-500 font-bold">Set Filter : </label>
                                                 <h5 className="m-0 p-0">from</h5>
-                                                <input className="bg-blue-200 rounded" type="date" value={filterStartDateDelivery} onChange={(e) => setFilterStartDateDelivery(e.target.value)} />
+                                                <input className="bg-blue-200 rounded" type="date" value={filterStartDateDelivery} onChange={(e) => { setFilterStartDateDelivery(e.target.value) }} />
                                                 <h5 className="m-0 p-0">to</h5>
-                                                <input className="bg-red-200 rounded" type="date" value={filterEndDateDelivery} onChange={(e) => setFilterEndDateDelivery(e.target.value)} />
+                                                <input className="bg-red-200 rounded" type="date" value={filterEndDateDelivery} onChange={(e) => { setFilterEndDateDelivery(e.target.value) }} />
                                             </div>
                                         </div>
                                         <div className='w-full h-auto overflow-scroll'>
@@ -1185,7 +1257,7 @@ export default function RidersDetails() {
                                                         <td className="p-4 text-center text-nowrap font-semibold">Receiver Name </td>
                                                         <td className="p-4 text-center text-nowrap font-semibold">Order tracking Id </td>
                                                         {/* <td className="p-4 text-center text-nowrap font-semibold">Time </td> */}
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Order Date </td>
+                                                        <td className="p-4 text-center text-nowrap font-semibold">Delivery Date </td>
                                                         <td className="p-4 text-center text-nowrap font-semibold">Receiver Contact No </td>
                                                         <td className="p-4 text-center text-nowrap font-semibold">Pickup Address </td>
                                                         <td className="p-4 text-center text-nowrap font-semibold">Order Type</td>
@@ -1197,13 +1269,13 @@ export default function RidersDetails() {
                                                 </thead>
                                                 <tbody>
                                                     {
-                                                        filteredOrdersDelivery?.map((a) => (
+                                                        deliveryOrdersData?.map((a) => (
                                                             <tr>
                                                                 <td className="p-4 text-center text-nowrap">{a?.creatorName}</td>
                                                                 <td className="p-4 text-center text-nowrap">{a?.CustomerName}</td>
                                                                 <td className="p-4 text-center text-nowrap">{a?.trackingId}</td>
                                                                 {/* <td className="p-4 text-center text-nowrap">{timerFun(a?.RiderAssignedDate, a?.RiderDeliveredDate)}</td> */}
-                                                                <td className="p-4 text-center text-nowrap">{a?.OrderDate}</td>
+                                                                <td className="p-4 text-center text-nowrap">{a?.RiderDeliveredDate}</td>
                                                                 <td className="p-4 text-center text-nowrap">{a?.CustomerContactNo}</td>
                                                                 <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.PickupAddress}</td>
 
@@ -1229,58 +1301,64 @@ export default function RidersDetails() {
                                 page === 1
                                     ?
                                     <div className="w-full flex flex-col gap-2">
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex  flex-col md:flex-row items-center justify-between">
                                             <h2 className="text-2xl!">Picked {filterStartDatePickup !== "" || filterEndDatePickup !== "" ? filterStartDatePickup + " to " + filterEndDatePickup : "All Orders"}</h2>
                                             <button onClick={generatePDFPickup} className="bg-green-600 rounded text-white p-2">Generate PDF</button>
                                             <div className="flex items-center gap-2">
                                                 <label className="text-red-500 font-bold">Set Filter : </label>
                                                 <h5 className="m-0 p-0">from</h5>
-                                                <input className="bg-blue-200 rounded" type="date" value={filterStartDatePickup} onChange={(e) => setFilterStartDatePickup(e.target.value)} />
+                                                <input className="bg-blue-200 rounded" type="date" value={filterStartDatePickup} onChange={(e) => { setFilterStartDatePickup(e.target.value) }} />
                                                 <h5 className="m-0 p-0">to</h5>
-                                                <input className="bg-red-200 rounded" type="date" value={filterEndDatePickup} onChange={(e) => setFilterEndDatePickup(e.target.value)} />
+                                                <input className="bg-red-200 rounded" type="date" value={filterEndDatePickup} onChange={(e) => { setFilterEndDatePickup(e.target.value) }} />
                                             </div>
                                         </div>
                                         <div className='w-full h-auto overflow-scroll'>
-                                            <table className="bg-white border w-full rounded-lg shadow-md">
-                                                <thead className="text-white bg-[#041026]">
-                                                    <tr>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Sender Name </td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Receiver Name </td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Order tracking Id </td>
-                                                        {/* <td className="p-4 text-center text-nowrap font-semibold">Time </td> */}
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Order Date </td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Receiver Contact No </td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Pickup Address </td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Order Type</td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Order Amount</td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Delivery Address </td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Status</td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Dimensions </td>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {
-                                                        filteredOrdersPickup?.map((a) => (
+                                            {
+                                                pickupLoading ?
+                                                    <div className='flex justify-center items-center w-full h-auto py-50'>
+                                                        Loading
+                                                    </div>
+                                                    :
+                                                    <table className="bg-white border w-full rounded-lg shadow-md">
+                                                        <thead className="text-white bg-[#041026]">
                                                             <tr>
-                                                                <td className="p-4 text-center text-nowrap">{a?.creatorName}</td>
-                                                                <td className="p-4 text-center text-nowrap">{a?.CustomerName}</td>
-                                                                <td className="p-4 text-center text-nowrap">{a?.trackingId}</td>
-                                                                {/* <td className="p-4 text-center text-nowrap">{timerFun(a?.RiderAssignedDate, a?.RiderDeliveredDate)}</td> */}
-                                                                <td className="p-4 text-center text-nowrap">{a?.OrderDate}</td>
-                                                                <td className="p-4 text-center text-nowrap">{a?.CustomerContactNo}</td>
-                                                                <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.PickupAddress}</td>
-
-                                                                <td className="p-4 text-center text-nowrap">{a?.OrderType}</td>
-                                                                <td className="p-4 text-center text-nowrap">{a?.OrderAmount + ' ' + 'Rs'}</td>
-                                                                <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.DeliveryAddress}</td>
-                                                                <td className="p-4 text-center text-nowrap">{a?.status}</td>
-                                                                <td className="p-4 text-center text-nowrap">{a?.Dimensions}</td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Sender Name </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Receiver Name </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Order tracking Id </td>
+                                                                {/* <td className="p-4 text-center text-nowrap font-semibold">Time </td> */}
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Pickup Date </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Receiver Contact No </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Pickup Address </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Order Type</td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Order Amount</td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Delivery Address </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Status</td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Dimensions </td>
                                                             </tr>
-                                                        ))
-                                                    }
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                        </thead>
+                                                        <tbody>
+                                                            {
+                                                                pickupOrdersData?.map((a) => (
+                                                                    <tr>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.creatorName}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.CustomerName}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.trackingId}</td>
+                                                                        {/* <td className="p-4 text-center text-nowrap">{timerFun(a?.RiderAssignedDate, a?.RiderDeliveredDate)}</td> */}
+                                                                        <td className="p-4 text-center text-nowrap">{a?.RiderAssignedDate}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.CustomerContactNo}</td>
+                                                                        <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.PickupAddress}</td>
+
+                                                                        <td className="p-4 text-center text-nowrap">{a?.OrderType}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.OrderAmount + ' ' + 'Rs'}</td>
+                                                                        <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.DeliveryAddress}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.status}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.Dimensions}</td>
+                                                                    </tr>
+                                                                ))
+                                                            }
+                                                        </tbody>
+                                                    </table>
+                                            }</div>
                                     </div>
                                     :
                                     null
@@ -1290,58 +1368,64 @@ export default function RidersDetails() {
                                 page === 2
                                     ?
                                     <div className="w-full flex flex-col gap-2">
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex flex-col md:flex-row items-center justify-between">
                                             <h2 className="text-2xl!">Returned {filterStartDateReturn !== "" || filterEndDateReturn !== "" ? filterStartDateReturn + " to " + filterEndDateReturn : "All Orders"}</h2>
                                             <button onClick={generatePDFReturn} className="bg-green-600 rounded text-white p-2">Generate PDF</button>
                                             <div className="flex items-center gap-2">
                                                 <label className="text-red-500 font-bold">Set Filter : </label>
                                                 <h5 className="m-0 p-0">from</h5>
-                                                <input className="bg-blue-200 rounded" type="date" value={filterStartDateReturn} onChange={(e) => setFilterStartDateReturn(e.target.value)} />
+                                                <input className="bg-blue-200 rounded" type="date" value={filterStartDateReturn} onChange={(e) => { setFilterStartDateReturn(e.target.value) }} />
                                                 <h5 className="m-0 p-0">to</h5>
-                                                <input className="bg-red-200 rounded" type="date" value={filterEndDateReturn} onChange={(e) => setFilterEndDateReturn(e.target.value)} />
+                                                <input className="bg-red-200 rounded" type="date" value={filterEndDateReturn} onChange={(e) => { setFilterEndDateReturn(e.target.value) }} />
                                             </div>
                                         </div>
                                         <div className='w-full h-auto overflow-scroll'>
-                                            <table className="bg-white border w-full rounded-lg shadow-md">
-                                                <thead className="text-white bg-[#041026]">
-                                                    <tr>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Sender Name </td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Receiver Name </td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Order tracking Id </td>
-                                                        {/* <td className="p-4 text-center text-nowrap font-semibold">Time </td> */}
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Order Date </td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Receiver Contact No </td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Pickup Address </td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Order Type</td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Order Amount</td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Delivery Address </td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Status</td>
-                                                        <td className="p-4 text-center text-nowrap font-semibold">Dimensions </td>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {
-                                                        filteredOrdersReturn?.map((a) => (
+                                            {
+                                                returnLoading ?
+                                                    <div className='flex justify-center items-center w-full h-auto py-50'>
+                                                        Loading
+                                                    </div>
+                                                    :
+                                                    <table className="bg-white border w-full rounded-lg shadow-md">
+                                                        <thead className="text-white bg-[#041026]">
                                                             <tr>
-                                                                <td className="p-4 text-center text-nowrap">{a?.creatorName}</td>
-                                                                <td className="p-4 text-center text-nowrap">{a?.CustomerName}</td>
-                                                                <td className="p-4 text-center text-nowrap">{a?.trackingId}</td>
-                                                                {/* <td className="p-4 text-center text-nowrap">{timerFun(a?.RiderAssignedDate, a?.RiderDeliveredDate)}</td> */}
-                                                                <td className="p-4 text-center text-nowrap">{a?.OrderDate}</td>
-                                                                <td className="p-4 text-center text-nowrap">{a?.CustomerContactNo}</td>
-                                                                <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.PickupAddress}</td>
-
-                                                                <td className="p-4 text-center text-nowrap">{a?.OrderType}</td>
-                                                                <td className="p-4 text-center text-nowrap">{a?.OrderAmount + ' ' + 'Rs'}</td>
-                                                                <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.DeliveryAddress}</td>
-                                                                <td className="p-4 text-center text-nowrap">{a?.status}</td>
-                                                                <td className="p-4 text-center text-nowrap">{a?.Dimensions}</td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Sender Name </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Receiver Name </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Order tracking Id </td>
+                                                                {/* <td className="p-4 text-center text-nowrap font-semibold">Time </td> */}
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Return Date </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Receiver Contact No </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Pickup Address </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Order Type</td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Order Amount</td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Delivery Address </td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Status</td>
+                                                                <td className="p-4 text-center text-nowrap font-semibold">Dimensions </td>
                                                             </tr>
-                                                        ))
-                                                    }
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                        </thead>
+                                                        <tbody>
+                                                            {
+                                                                returnOrdersData?.map((a) => (
+                                                                    <tr>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.creatorName}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.CustomerName}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.trackingId}</td>
+                                                                        {/* <td className="p-4 text-center text-nowrap">{timerFun(a?.RiderAssignedDate, a?.RiderDeliveredDate)}</td> */}
+                                                                        <td className="p-4 text-center text-nowrap">{a?.RiderReturnDate}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.CustomerContactNo}</td>
+                                                                        <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.PickupAddress}</td>
+
+                                                                        <td className="p-4 text-center text-nowrap">{a?.OrderType}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.OrderAmount + ' ' + 'Rs'}</td>
+                                                                        <td className="p-4 text-center text-nowrap max-w-[100px] text-wrap!">{a?.DeliveryAddress}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.status}</td>
+                                                                        <td className="p-4 text-center text-nowrap">{a?.Dimensions}</td>
+                                                                    </tr>
+                                                                ))
+                                                            }
+                                                        </tbody>
+                                                    </table>
+                                            }</div>
                                     </div>
                                     :
                                     null

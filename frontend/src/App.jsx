@@ -32,64 +32,96 @@ import OrdersCancelledByVendor from './Admin/vendor-cancelled'
 import Delivery from './Rider.jsx/delivery'
 import Return from './Rider.jsx/return'
 import Accounts from './Admin/Accounts'
+import AccountantAccounts from './Accountant/Accounts'
 import VendorsManagement from './Admin/VendorsManagement'
 import VendorPage from './HomePage.jsx/vendor-page'
 import VendorDetails from './Admin/vendors-details'
 import FormLoader from './HomePage.jsx/loader'
 import RidersDeleted from './Admin/deleted-riders'
+import AccountsLayout from './Accountant/AccountsLayout'
+import EmployeManagement from './Admin/EmployeManagement'
+import ManagerLayout from './Manager/ManagerLayout'
 
 function App() {
   return (
     <Routes>
       {/* ------------User Routes----------------------------- */}
-      <Route path='/form-loader' element={<FormLoader/>}/>
+      <Route path='/form-loader' element={<FormLoader />} />
       <Route path='/' element={<Layout />}>
         <Route path='home' element={<Section1 />} />
         <Route index element={<Section1 />} />
-        <Route path='/order-form' element={<OrderForm/>}/>
-        <Route path='/vendor-page' element={<VendorPage/>}/>
-        <Route path='/tracking-id' element={<TrackingId/>} />
-        <Route path='/contact-us' element={<ContactUs/>} />
-        <Route path='/about-us' element={<AboutUs/>} />
+        <Route path='/order-form' element={<OrderForm />} />
+        <Route path='/vendor-page' element={<VendorPage />} />
+        <Route path='/tracking-id' element={<TrackingId />} />
+        <Route path='/contact-us' element={<ContactUs />} />
+        <Route path='/about-us' element={<AboutUs />} />
       </Route>
 
       {/* -------------Admin Routes--------------------------- */}
       <Route path='/admin' element={<AdminLayout />}>
         <Route index element={<AdminPage1 />} />
-        <Route path='riders' element={<Riders/>} />
-        <Route path='deleted-riders' element={<RidersDeleted/>} />
-        <Route path='vendors-management' element={<VendorsManagement/>} />
-        <Route path='vendors-management/:vid/:vendorName' element={<VendorDetails/>} />
-        <Route path='riders/:rid' element={<RidersDetails/>} />
-        <Route path='unassigned-orders' element={<UnassignedOrders/>} />
-        <Route path='unapproved-users' element={<UnapprovedUsers/>} />
-        <Route path='vandor-cancelled' element={<OrdersCancelledByVendor/>} />
-        <Route path='users' element={<Users/>} />
-        <Route path='users/:uid' element={<UsersDetail/>} />
-        <Route path='orders' element={<Orders/>} />
-        <Route path='warehouse-scanner' element={<WarehouseScanner/>} />
-        <Route path='order-at-warehouse' element={<OrdersAtWarehouse/>} />
-        <Route path='cancel-management' element={<CancelManagement/>} />
-        <Route path='return-management' element={<DeliveryManagement/>} />
-        <Route path='invoice-report' element={<InvoiceReport/>} />
-        <Route path='accounts' element={<Accounts/>} />
+        <Route path='riders' element={<Riders />} />
+        <Route path='deleted-riders' element={<RidersDeleted />} />
+        <Route path='vendors-management' element={<VendorsManagement />} />
+        <Route path='vendors-management/:vid/:vendorName' element={<VendorDetails />} />
+        <Route path='riders/:rid' element={<RidersDetails />} />
+        <Route path='unassigned-orders' element={<UnassignedOrders />} />
+        <Route path='unapproved-users' element={<UnapprovedUsers />} />
+        <Route path='vandor-cancelled' element={<OrdersCancelledByVendor />} />
+        <Route path='users' element={<Users />} />
+        <Route path='users/:uid' element={<UsersDetail />} />
+        <Route path='orders' element={<Orders />} />
+        <Route path='warehouse-scanner' element={<WarehouseScanner />} />
+        <Route path='order-at-warehouse' element={<OrdersAtWarehouse />} />
+        <Route path='cancel-management' element={<CancelManagement />} />
+        <Route path='return-management' element={<DeliveryManagement />} />
+        <Route path='invoice-report' element={<InvoiceReport />} />
+        <Route path='accounts' element={<Accounts />} />
+        <Route path='employe-management' element={<EmployeManagement />} />
+      </Route>
+
+      {/* -------------Accountant Routes--------------------------- */}
+      <Route path='/Accountant' element={<AccountsLayout />}>
+        <Route index element={<AccountantAccounts />} />
+      </Route>
+
+
+      {/* -------------Manager Routes--------------------------- */}
+      <Route path='/Manager' element={<ManagerLayout />}>
+        <Route index element={<UnassignedOrders />} />
+        <Route path='riders' element={<Riders />} />
+        <Route path='deleted-riders' element={<RidersDeleted />} />
+        <Route path='vendors-management' element={<VendorsManagement />} />
+        <Route path='vendors-management/:vid/:vendorName' element={<VendorDetails />} />
+        <Route path='riders/:rid' element={<RidersDetails />} />
+        <Route path='unapproved-users' element={<UnapprovedUsers />} />
+        <Route path='vandor-cancelled' element={<OrdersCancelledByVendor />} />
+        <Route path='users' element={<Users />} />
+        <Route path='users/:uid' element={<UsersDetail />} />
+        <Route path='orders' element={<Orders />} />
+        <Route path='warehouse-scanner' element={<WarehouseScanner />} />
+        <Route path='order-at-warehouse' element={<OrdersAtWarehouse />} />
+        <Route path='cancel-management' element={<CancelManagement />} />
+        <Route path='return-management' element={<DeliveryManagement />} />
+        <Route path='invoice-report' element={<InvoiceReport />} />
+        <Route path='accounts' element={<Accounts />} />
       </Route>
 
       {/* --------------Rider Routes------------------------------------- */}
-      <Route path='/rider' element={<RiderLayout/>}>
-        <Route index element={<RiderPage/>} />
-        <Route path='orders-with-rider' element={<OrdersWithRider/>} />
+      <Route path='/rider' element={<RiderLayout />}>
+        <Route index element={<RiderPage />} />
+        <Route path='orders-with-rider' element={<OrdersWithRider />} />
 
-        <Route path='delivery' element={<Delivery/>} />
-        <Route path='return'   element={<Return/>} />
+        <Route path='delivery' element={<Delivery />} />
+        <Route path='return' element={<Return />} />
 
-        <Route path='assigned-orders' element={<RiderAssignedOrders/>} />
-        <Route path='scan-orders' element={<RiderScanOrders/>} />
+        <Route path='assigned-orders' element={<RiderAssignedOrders />} />
+        <Route path='scan-orders' element={<RiderScanOrders />} />
       </Route>
 
       {/* ----------------Auth-------------------------------------------- */}
-      <Route path='/signup' element={<Signup/>} />
-      <Route path='/login' element={<Login/>} />
+      <Route path='/signup' element={<Signup />} />
+      <Route path='/login' element={<Login />} />
     </Routes>
   )
 }

@@ -1,3 +1,4 @@
+const jwtTokenSecret = require('../.env.js');
 const OrdersModel = require('../models/orders-model')
 const HttpError = require('../models/http-error')
 
@@ -14,7 +15,7 @@ const authenticateApprovedUserToken = (req, res, next) => {
     if (!token) {
         return res.status(401).json({ error: 'Access token required' });
     }
-    jwt.verify(token, "super-duper-hassan-secret-dont-share", async (err, user) => {
+    jwt.verify(token, jwtTokenSecret, async (err, user) => {
         if (err) {
             // Token is either expired or invalid
             if (err.name === 'TokenExpiredError') {
@@ -24,7 +25,7 @@ const authenticateApprovedUserToken = (req, res, next) => {
         }
         req.user = user;
 
-        let userIN = await UserModel.findOne({_id: req.user.userId})
+        let userIN = await UserModel.findOne({ _id: req.user.userId })
 
         if (userIN.status !== "approved") {
             return next(new HttpError('Only Admin is authenticated', 403))
@@ -34,14 +35,13 @@ const authenticateApprovedUserToken = (req, res, next) => {
 };
 
 
-
-const authenticateVendorToken = (req, res, next) => {
+const authenticateAccountantToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) {
         return res.status(401).json({ error: 'Access token required' });
     }
-    jwt.verify(token, "super-duper-hassan-secret-dont-share", async (err, user) => {
+    jwt.verify(token, jwtTokenSecret, async (err, user) => {
         if (err) {
             // Token is either expired or invalid
             if (err.name === 'TokenExpiredError') {
@@ -51,7 +51,62 @@ const authenticateVendorToken = (req, res, next) => {
         }
         req.user = user;
 
-        let userIN = await UserModel.findOne({_id: req.user.userId})
+        let userIN = await UserModel.findOne({ _id: req.user.userId })
+
+        if (userIN?.status !== "accountant") {
+            return next(new HttpError('Only Accountant is authenticated', 403))
+        }
+        next();
+    });
+};
+exports.authenticateAccountantToken = authenticateAccountantToken;
+
+
+const authenticateManagerToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ error: 'Access token required' });
+    }
+    jwt.verify(token, jwtTokenSecret, async (err, user) => {
+        if (err) {
+            // Token is either expired or invalid
+            if (err.name === 'TokenExpiredError') {
+                return res.status(401).json({ error: 'Token expired' });
+            }
+            return res.status(403).json({ error: 'Invalid token' });
+        }
+        req.user = user;
+
+        let userIN = await UserModel.findOne({ _id: req.user.userId })
+
+        if (userIN.status !== "manager") {
+            return next(new HttpError('Only Manager is authenticated', 403))
+        }
+        next();
+    });
+};
+exports.authenticateManagerToken = authenticateManagerToken;
+
+
+
+const authenticateVendorToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ error: 'Access token required' });
+    }
+    jwt.verify(token, jwtTokenSecret, async (err, user) => {
+        if (err) {
+            // Token is either expired or invalid
+            if (err.name === 'TokenExpiredError') {
+                return res.status(401).json({ error: 'Token expired' });
+            }
+            return res.status(403).json({ error: 'Invalid token' });
+        }
+        req.user = user;
+
+        let userIN = await UserModel.findOne({ _id: req.user.userId })
 
         if (userIN.status !== "vendor") {
             return next(new HttpError('Only vendor is authenticated', 403))
@@ -66,7 +121,7 @@ const authenticateVendorAndApprovedUserToken = async (req, res, next) => {
     if (!token) {
         return res.status(401).json({ error: 'Access token required' });
     }
-    jwt.verify(token, "super-duper-hassan-secret-dont-share", async (err, user) => {
+    jwt.verify(token, jwtTokenSecret, async (err, user) => {
         if (err) {
             // Token is either expired or invalid
             if (err.name === 'TokenExpiredError') {
@@ -76,13 +131,13 @@ const authenticateVendorAndApprovedUserToken = async (req, res, next) => {
         }
         req.user = user;
 
-        let userIN = await UserModel.findOne({_id: req.user.userId})
+        let userIN = await UserModel.findOne({ _id: req.user.userId })
 
-        if (userIN.status === "vendor") {
+        if (userIN?.status === "vendor") {
             return res.status(200).json({ message: 'vendor' });
         }
 
-        if (userIN.status === "approved") {
+        if (userIN?.status === "approved") {
             return res.status(200).json({ message: 'approved' });
         }
 
@@ -96,7 +151,7 @@ const authenticateAdminAndRiderAndApprovedandVendorToken = async (req, res, next
     if (!token) {
         return res.status(401).json({ error: 'Access token required' });
     }
-    jwt.verify(token, "super-duper-hassan-secret-dont-share", (err, user) => {
+    jwt.verify(token, jwtTokenSecret, (err, user) => {
         if (err) {
             // Token is either expired or invalid
             if (err.name === 'TokenExpiredError') {
@@ -123,7 +178,7 @@ const authenticateAdminAndRiderToken = async (req, res, next) => {
         }
         let decoded
         try {
-            decoded = jwt.verify(token, "super-duper-hassan-secret-dont-share");
+            decoded = jwt.verify(token, jwtTokenSecret);
         }
         catch (err) {
             if (err.name === 'TokenExpiredError') {
@@ -159,7 +214,7 @@ const authenticateThirdPartyToken = async (req, res, next) => {
         }
         let decoded
         try {
-            decoded = jwt.verify(token, "super-duper-hassan-secret-dont-share");
+            decoded = jwt.verify(token, jwtTokenSecret);
         }
         catch (err) {
             if (err.name === 'TokenExpiredError') {
@@ -168,13 +223,13 @@ const authenticateThirdPartyToken = async (req, res, next) => {
             return res.status(403).json({ error: 'Invalid token' });
         }
 
-        let userIN = await UserModel.findOne({_id: decoded.userId})
+        let userIN = await UserModel.findOne({ _id: decoded.userId })
 
         if (userIN.status !== "vendor") {
             return next(new HttpError('Not authenticated', 403));
         }
 
-        let orderIN = await OrdersModel.find({creator: decoded.userId})
+        let orderIN = await OrdersModel.find({ creator: decoded.userId })
         if (orderIN.length >= 2) {
             return next(new HttpError('Rate Limit Exceeded', 403));
         }
@@ -188,7 +243,7 @@ const authenticateThirdPartyToken = async (req, res, next) => {
 
 //CREATING DATA
 const createOrders = async (req, res, next) => {
-    const { OrderType, OrderAmount, CustomerName, DeliveryCity, PickupCity, OrderDate, CustomerContactNo, DeliveryAddress, PickupAddress, Dimensions, fragility, weight } = req.body;
+    const { OrderType, OrderAmount, CustomerName, DeliveryCity, PickupCity, OrderDate, CustomerContactNo, DeliveryAddress, PickupAddress, Dimensions, fragility, weight, CodType, RemarksText } = req.body;
 
     const authHeader = req.headers['authorization'];
     if (!authHeader) {
@@ -198,7 +253,7 @@ const createOrders = async (req, res, next) => {
     let creatorId;
     let creatorName;
     try {
-        const decoded = jwt.verify(token, "super-duper-hassan-secret-dont-share");
+        const decoded = jwt.verify(token, jwtTokenSecret);
         creatorId = decoded.userId;
         creatorName = decoded.Name;
     } catch (err) {
@@ -233,6 +288,7 @@ const createOrders = async (req, res, next) => {
         OrderDate,
         RiderAssignedDate: "",
         RiderDeliveredDate: "",
+        RiderReturnDate: "",
 
         CustomerContactNo,
         DeliveryAddress,
@@ -252,6 +308,9 @@ const createOrders = async (req, res, next) => {
         trackingId: perfectOrderTrackingId,
         returnAttempt: "",
         accountsStatus: "",
+
+        CodType,
+        RemarksText,
     })
 
     //creating orders & adding it to a user
@@ -282,8 +341,8 @@ const createOrders = async (req, res, next) => {
 
 
 const createVendorOrders = async (req, res, next) => {
-    const { OrderType, OrderAmount, CustomerName, DeliveryCity, PickupCity, OrderDate, CustomerContactNo, DeliveryAddress, PickupAddress, Dimensions, fragility, weight } = req.body;
-    
+    const { OrderType, OrderAmount, CustomerName, DeliveryCity, PickupCity, OrderDate, CustomerContactNo, DeliveryAddress, PickupAddress, Dimensions, fragility, weight, CodType, RemarksText } = req.body;
+
     let creatorId = req.params.vid;
     let creatorName = req.params.vendorName;
 
@@ -312,6 +371,7 @@ const createVendorOrders = async (req, res, next) => {
         OrderDate,
         RiderAssignedDate: "",
         RiderDeliveredDate: "",
+        RiderReturnDate: "",
 
         CustomerContactNo,
         DeliveryAddress,
@@ -331,6 +391,9 @@ const createVendorOrders = async (req, res, next) => {
         trackingId: perfectOrderTrackingId,
         returnAttempt: "",
         accountsStatus: "",
+
+        CodType,
+        RemarksText,
     })
 
     //creating orders & adding it to a user
@@ -381,6 +444,102 @@ const getAllOrders = async (req, res, next) => {
     }
 }
 
+
+const getAllFilteredOrders = async (req, res, next) => {
+    try {
+        const filterStartDate = req.query.filterStartDate;
+        const filterEndDate = req.query.filterEndDate;
+
+        const search = req.query.search;
+
+        const query = { trackingId: { $regex: search, $options: 'i' } };
+
+        if (filterStartDate || filterEndDate) {
+            query.$expr = {
+                $and: []
+            };
+
+            if (filterStartDate) {
+                const startDate = new Date(filterStartDate);
+                startDate.setHours(0, 0, 0, 0);
+
+                // Convert string date to Date object for comparison
+                query.$expr.$and.push({
+                    $gte: [
+                        {
+                            $dateFromString: {
+                                dateString: "$OrderDate",
+                            }
+                        },
+                        startDate
+                    ]
+                });
+            }
+
+            if (filterEndDate) {
+                const endDate = new Date(filterEndDate);
+                endDate.setHours(23, 59, 59, 999);
+
+                query.$expr.$and.push({
+                    $lte: [
+                        {
+                            $dateFromString: {
+                                dateString: "$OrderDate",
+                            }
+                        },
+                        endDate
+                    ]
+                });
+            }
+        }
+
+        // Execute the query with database-level filtering
+        const orders = await OrdersModel.find(query);
+
+        if (!orders || orders.length === 0) {
+            return res.status(200).json({
+                success: true,
+                orders: [],
+                count: 0,
+                message: "No orders found for the given criteria"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            orders: orders,
+            count: orders.length,
+        });
+
+    } catch (err) {
+        console.error('Get orders error:', err.message);
+        console.error('Error stack:', err.stack);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+};
+// const getAllFilteredOrders = async (req, res, next) => {
+//     try {
+//         const orders = await OrdersModel.find()
+//         res.json(orders)
+//     }
+//     catch (err) {
+//         return next(new HttpError('could not get all orders', 500))
+//     }
+// }
+
+const SelectedgetAllOrders = async (req, res, next) => {
+    try {
+        const orders = await OrdersModel.find().select('status OrderAmount OrderDate')
+        res.json(orders)
+    }
+    catch (err) {
+        return next(new HttpError('could not get all orders', 500))
+    }
+}
+
 const getOrdersByStatusOrdersAtWarehouse = async (req, res, next) => {
     try {
         const orders = await OrdersModel.find({ status: { $in: ["At Warehouse - Rider Picked", "At Warehouse - Receiver Cancelled"] } })
@@ -410,7 +569,7 @@ const getOrdersByStatusOrdersToReturn = async (req, res, next) => {
         const token = authHeader.split(' ')[1];
         let ridersId;
         try {
-            const decoded = jwt.verify(token, "super-duper-hassan-secret-dont-share");
+            const decoded = jwt.verify(token, jwtTokenSecret);
             ridersId = decoded.ridersId;
         } catch (err) {
             if (err.name === 'TokenExpiredError') {
@@ -437,7 +596,7 @@ const getOrdersByStatusOrdersToDeliver = async (req, res, next) => {
         const token = authHeader.split(' ')[1];
         let ridersId;
         try {
-            const decoded = jwt.verify(token, "super-duper-hassan-secret-dont-share");
+            const decoded = jwt.verify(token, jwtTokenSecret);
             ridersId = decoded.ridersId;
         } catch (err) {
             if (err.name === 'TokenExpiredError') {
@@ -466,7 +625,7 @@ const getOrdersByToken = async (req, res, next) => {
         const token = authHeader.split(' ')[1];
         let creatorId;
         try {
-            const decoded = jwt.verify(token, "super-duper-hassan-secret-dont-share");
+            const decoded = jwt.verify(token, jwtTokenSecret);
             creatorId = decoded.userId;
         } catch (err) {
             if (err.name === 'TokenExpiredError') {
@@ -504,7 +663,7 @@ const getOrdersByStatusOrdersWithRider = async (req, res, next) => {
         const token = authHeader.split(' ')[1];
         let ridersId;
         try {
-            const decoded = jwt.verify(token, "super-duper-hassan-secret-dont-share");
+            const decoded = jwt.verify(token, jwtTokenSecret);
             ridersId = decoded.ridersId;
         } catch (err) {
             if (err.name === 'TokenExpiredError') {
@@ -537,7 +696,7 @@ const getOrdersByStatusRiderAssignedToPickupForRiderIdToken = async (req, res, n
         const token = authHeader.split(' ')[1];
         let ridersId;
         try {
-            const decoded = jwt.verify(token, "super-duper-hassan-secret-dont-share");
+            const decoded = jwt.verify(token, jwtTokenSecret);
             ridersId = decoded.ridersId;
         } catch (err) {
             if (err.name === 'TokenExpiredError') {
@@ -583,31 +742,265 @@ const getOrdersByTrackingId = async (req, res, next) => {
     }
 }
 
+
 const getOrdersByStatusOrdersRiderDelivered = async (req, res, next) => {
     try {
-        const orderById = await OrdersModel.find({ status: "Return - Rider Delivered" })
-        if (!orderById) {
-            return next(new HttpError("Order not found", 404));
+        const filterStartDate = req.query.filterStartDate;
+        const filterEndDate = req.query.filterEndDate;
+
+        const query = { status: "Return - Rider Delivered", accountsStatus: ""  };
+
+        if (filterStartDate || filterEndDate) {
+            query.$expr = {
+                $and: []
+            };
+
+            if (filterStartDate) {
+                const startDate = new Date(filterStartDate);
+                startDate.setHours(0, 0, 0, 0);
+
+                // Convert string date to Date object for comparison
+                query.$expr.$and.push({
+                    $gte: [
+                        {
+                            $dateFromString: {
+                                dateString: "$OrderDate",
+                            }
+                        },
+                        startDate
+                    ]
+                });
+            }
+
+            if (filterEndDate) {
+                const endDate = new Date(filterEndDate);
+                endDate.setHours(23, 59, 59, 999);
+
+                query.$expr.$and.push({
+                    $lte: [
+                        {
+                            $dateFromString: {
+                                dateString: "$OrderDate",
+                            }
+                        },
+                        endDate
+                    ]
+                });
+            }
         }
-        return res.status(200).json({ order: orderById })
+
+        // Execute the query with database-level filtering
+        const orders = await OrdersModel.find(query);
+
+        if (!orders || orders.length === 0) {
+            return res.status(200).json({
+                success: true,
+                order: [],
+                count: 0,
+                message: "No orders found for the given criteria"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            order: orders,
+            count: orders.length,
+        });
+
     } catch (err) {
-        return next(new HttpError("Could not Get order", 500));
+        console.error('Get orders error:', err.message);
+        console.error('Error stack:', err.stack);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
     }
-}
+};
+// const getOrdersByStatusOrdersRiderDelivered = async (req, res, next) => {
+//     try {
+//         const orderById = await OrdersModel.find({ status: "Return - Rider Delivered", accountsStatus: "" })
+//         if (!orderById) {
+//             return next(new HttpError("Order not found", 404));
+//         }
+//         return res.status(200).json({ order: orderById })
+//     } catch (err) {
+//         return next(new HttpError("Could not Get order", 500));
+//     }
+// }
+
+// const getOrdersByStatusOrdersRiderDeliveredAmountPicked = async (req, res, next) => {
+//     try {
+//         const orderById = await OrdersModel.find({ status: "Return - Rider Delivered", accountsStatus: "Amount - Picked From Rider" })
+//         if (!orderById) {
+//             return next(new HttpError("Order not found", 404));
+//         }
+//         return res.status(200).json({ order: orderById })
+//     } catch (err) {
+//         return next(new HttpError("Could not Get order", 500));
+//     }
+// }
+const getOrdersByStatusOrdersRiderDeliveredAmountPicked = async (req, res, next) => {
+    try {
+        const filterStartDate = req.query.filterStartDate;
+        const filterEndDate = req.query.filterEndDate;
+
+        const query = { status: "Return - Rider Delivered", accountsStatus: "Amount - Picked From Rider"  };
+
+        if (filterStartDate || filterEndDate) {
+            query.$expr = {
+                $and: []
+            };
+
+            if (filterStartDate) {
+                const startDate = new Date(filterStartDate);
+                startDate.setHours(0, 0, 0, 0);
+
+                // Convert string date to Date object for comparison
+                query.$expr.$and.push({
+                    $gte: [
+                        {
+                            $dateFromString: {
+                                dateString: "$OrderDate",
+                            }
+                        },
+                        startDate
+                    ]
+                });
+            }
+
+            if (filterEndDate) {
+                const endDate = new Date(filterEndDate);
+                endDate.setHours(23, 59, 59, 999);
+
+                query.$expr.$and.push({
+                    $lte: [
+                        {
+                            $dateFromString: {
+                                dateString: "$OrderDate",
+                            }
+                        },
+                        endDate
+                    ]
+                });
+            }
+        }
+
+        // Execute the query with database-level filtering
+        const orders = await OrdersModel.find(query);
+
+        if (!orders || orders.length === 0) {
+            return res.status(200).json({
+                success: true,
+                order: [],
+                count: 0,
+                message: "No orders found for the given criteria"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            order: orders,
+            count: orders.length,
+        });
+
+    } catch (err) {
+        console.error('Get orders error:', err.message);
+        console.error('Error stack:', err.stack);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+};
+exports.getOrdersByStatusOrdersRiderDeliveredAmountPicked = getOrdersByStatusOrdersRiderDeliveredAmountPicked;
 
 //GETTING DATA BY USER ID
 const getOrdersByUserId = async (req, res, next) => {
     try {
         const userId = req.params.uid;
-        const orderById = await OrdersModel.find({ creator: userId })
-        if (!orderById) {
-            return next(new HttpError("Order not found", 404));
+        const filterStartDate = req.query.filterStartDate;
+        const filterEndDate = req.query.filterEndDate;
+
+        const query = { creator: userId };
+
+        if (filterStartDate || filterEndDate) {
+            query.$expr = {
+                $and: []
+            };
+
+            if (filterStartDate) {
+                const startDate = new Date(filterStartDate);
+                startDate.setHours(0, 0, 0, 0);
+
+                // Convert string date to Date object for comparison
+                query.$expr.$and.push({
+                    $gte: [
+                        {
+                            $dateFromString: {
+                                dateString: "$OrderDate",
+                            }
+                        },
+                        startDate
+                    ]
+                });
+            }
+
+            if (filterEndDate) {
+                const endDate = new Date(filterEndDate);
+                endDate.setHours(23, 59, 59, 999);
+
+                query.$expr.$and.push({
+                    $lte: [
+                        {
+                            $dateFromString: {
+                                dateString: "$OrderDate",
+                            }
+                        },
+                        endDate
+                    ]
+                });
+            }
         }
-        return res.status(200).json({ order: orderById })
+
+        // Execute the query with database-level filtering
+        const orders = await OrdersModel.find(query);
+
+        if (!orders || orders.length === 0) {
+            return res.status(200).json({
+                success: true,
+                orders: [],
+                count: 0,
+                message: "No orders found for the given criteria"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            order: orders,
+            count: orders.length,
+        });
+
     } catch (err) {
-        return next(new HttpError("Could not Get order", 500));
+        console.error('Get orders error:', err.message);
+        console.error('Error stack:', err.stack);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
     }
-}
+};
+// const getOrdersByUserId = async (req, res, next) => {
+//     try {
+//         const userId = req.params.uid;
+//         const orderById = await OrdersModel.find({ creator: userId })
+//         if (!orderById) {
+//             return next(new HttpError("Order not found", 404));
+//         }
+//         return res.status(200).json({ order: orderById })
+//     } catch (err) {
+//         return next(new HttpError("Could not Get order", 500));
+//     }
+// }
 
 const getVendorOrdersByUserId = async (req, res, next) => {
     try {
@@ -648,63 +1041,364 @@ const getOrdersByRiderId = async (req, res, next) => {
 const getOrdersForPickupByRiderId = async (req, res, next) => {
     try {
         const riderId = req.params.rid;
-        const ordersForPickup = await OrdersModel.find({ ridersIdForPickup: riderId }) || [];
-        if (!ordersForPickup || ordersForPickup.length === 0) {
+        const filterStartDate = req.query.filterStartDate;
+        const filterEndDate = req.query.filterEndDate;
+
+        const query = { ridersIdForPickup: riderId };
+
+        if (filterStartDate || filterEndDate) {
+            query.$expr = {
+                $and: []
+            };
+
+            if (filterStartDate) {
+                const startDate = new Date(filterStartDate);
+                startDate.setHours(0, 0, 0, 0);
+
+                // Convert string date to Date object for comparison
+                query.$expr.$and.push({
+                    $gte: [
+                        {
+                            $dateFromString: {
+                                dateString: "$RiderAssignedDate",
+                            }
+                        },
+                        startDate
+                    ]
+                });
+            }
+
+            if (filterEndDate) {
+                const endDate = new Date(filterEndDate);
+                endDate.setHours(23, 59, 59, 999);
+
+                query.$expr.$and.push({
+                    $lte: [
+                        {
+                            $dateFromString: {
+                                dateString: "$RiderAssignedDate",
+                            }
+                        },
+                        endDate
+                    ]
+                });
+            }
+        }
+
+        // Execute the query with database-level filtering
+        const orders = await OrdersModel.find(query);
+
+        if (!orders || orders.length === 0) {
             return res.status(200).json({
                 success: true,
                 orders: [],
-                count: 0
+                count: 0,
+                message: "No orders found for the given criteria"
             });
         }
-        return res.status(200).json({ orders: ordersForPickup });
+
+        return res.status(200).json({
+            success: true,
+            orders: orders,
+            count: orders.length,
+        });
+
     } catch (err) {
         console.error('Get orders error:', err.message);
+        console.error('Error stack:', err.stack);
         return res.status(500).json({
             success: false,
             message: "Internal server error"
         });
     }
 };
+// const getOrdersForPickupByRiderId = async (req, res, next) => {
+//     try {
+//         const riderId = req.params.rid;
+//         const filterStartDate = req.query.filterStartDate;
+//         const filterEndDate = req.query.filterEndDate;
+
+//         const allOrders = await OrdersModel.find({
+//             ridersIdForPickup: riderId
+//         });
+
+//         let filteredOrders = allOrders;
+
+//         if (filterStartDate || filterEndDate) {
+//             filteredOrders = allOrders.filter(order => {
+//                 try {
+//                     const orderDate = new Date(order.RiderAssignedDate);
+
+//                     let startMatch = true;
+//                     let endMatch = true;
+
+//                     if (filterStartDate) {
+//                         const startDate = new Date(filterStartDate);
+//                         startDate.setHours(0, 0, 0, 0);
+//                         startMatch = orderDate >= startDate;
+//                     }
+
+//                     if (filterEndDate) {
+//                         const endDate = new Date(filterEndDate);
+//                         endDate.setHours(23, 59, 59, 999);
+//                         endMatch = orderDate <= endDate;
+//                     }
+
+//                     return startMatch && endMatch;
+
+//                 } catch (error) {
+//                     console.log('DEBUG - Error parsing date:', error.message);
+//                     return false;
+//                 }
+//             });
+//         }
+
+//         if (filteredOrders.length === 0) {
+//             return res.status(200).json({
+//                 success: true,
+//                 orders: [],
+//                 count: 0,
+//                 message: "No orders found for the given criteria"
+//             });
+//         }
+
+//         return res.status(200).json({ 
+//             success: true,
+//             orders: filteredOrders,
+//             count: filteredOrders.length
+//         });
+
+//     } catch (err) {
+//         console.error('Get orders error:', err.message);
+//         console.error('Error stack:', err.stack);
+//         return res.status(500).json({
+//             success: false,
+//             message: "Internal server error"
+//         });
+//     }
+// };
+
+// const getOrdersForPickupByRiderId = async (req, res, next) => {
+//     try {
+//         const riderId = req.params.rid;
+//         const filterStartDate = req.query.filterStartDate;
+//         const filterEndDate = req.query.filterEndDate;
+
+//         const ordersForPickup = await OrdersModel.find({ ridersIdForPickup: riderId }) || [];
+//         if (!ordersForPickup || ordersForPickup.length === 0) {
+//             return res.status(200).json({
+//                 success: true,
+//                 orders: [],
+//                 count: 0
+//             });
+//         }
+//         return res.status(200).json({ orders: ordersForPickup });
+//     } catch (err) {
+//         console.error('Get orders error:', err.message);
+//         return res.status(500).json({
+//             success: false,
+//             message: "Internal server error"
+//         });
+//     }
+// };
+
+
 const getOrdersForDeliveryByRiderId = async (req, res, next) => {
     try {
         const riderId = req.params.rid;
-        const ordersForDelivery = await OrdersModel.find({ ridersIdForDelivery: riderId }) || [];
-        if (!ordersForDelivery || ordersForDelivery.length === 0) {
+        const filterStartDate = req.query.filterStartDate;
+        const filterEndDate = req.query.filterEndDate;
+
+        const query = { ridersIdForDelivery: riderId };
+
+        if (filterStartDate || filterEndDate) {
+            query.$expr = {
+                $and: []
+            };
+
+            if (filterStartDate) {
+                const startDate = new Date(filterStartDate);
+                startDate.setHours(0, 0, 0, 0);
+
+                // Convert string date to Date object for comparison
+                query.$expr.$and.push({
+                    $gte: [
+                        {
+                            $dateFromString: {
+                                dateString: "$RiderDeliveredDate",
+                            }
+                        },
+                        startDate
+                    ]
+                });
+            }
+
+            if (filterEndDate) {
+                const endDate = new Date(filterEndDate);
+                endDate.setHours(23, 59, 59, 999);
+
+                query.$expr.$and.push({
+                    $lte: [
+                        {
+                            $dateFromString: {
+                                dateString: "$RiderDeliveredDate",
+                            }
+                        },
+                        endDate
+                    ]
+                });
+            }
+        }
+
+        const orders = await OrdersModel.find(query);
+
+        if (!orders || orders.length === 0) {
             return res.status(200).json({
                 success: true,
                 orders: [],
-                count: 0
+                count: 0,
+                message: "No orders found for the given criteria"
             });
         }
-        return res.status(200).json({ orders: ordersForDelivery });
+
+        return res.status(200).json({
+            success: true,
+            orders: orders,
+            count: orders.length,
+        });
+
     } catch (err) {
         console.error('Get orders error:', err.message);
+        console.error('Error stack:', err.stack);
         return res.status(500).json({
             success: false,
             message: "Internal server error"
         });
     }
 };
+
+// const getOrdersForDeliveryByRiderId = async (req, res, next) => {
+//     try {
+//         const riderId = req.params.rid;
+//         const filterStartDate = req.params.filterStartDate;
+//         const filterEndDate = req.params.filterEndDate;
+
+//         const ordersForDelivery = await OrdersModel.find({ ridersIdForDelivery: riderId }) || [];
+//         if (!ordersForDelivery || ordersForDelivery.length === 0) {
+//             return res.status(200).json({
+//                 success: true,
+//                 orders: [],
+//                 count: 0
+//             });
+//         }
+//         return res.status(200).json({ orders: ordersForDelivery });
+//     } catch (err) {
+//         console.error('Get orders error:', err.message);
+//         return res.status(500).json({
+//             success: false,
+//             message: "Internal server error"
+//         });
+//     }
+// };
+
+
+
 const getOrdersForReturnByRiderId = async (req, res, next) => {
     try {
         const riderId = req.params.rid;
-        const ordersForReturn = await OrdersModel.find({ ridersIdForReturn: riderId }) || [];
-        if (!ordersForReturn || ordersForReturn.length === 0) {
+        const filterStartDate = req.query.filterStartDate;
+        const filterEndDate = req.query.filterEndDate;
+
+        const query = { ridersIdForReturn: riderId };
+
+        if (filterStartDate || filterEndDate) {
+            query.$expr = {
+                $and: []
+            };
+
+            if (filterStartDate) {
+                const startDate = new Date(filterStartDate);
+                startDate.setHours(0, 0, 0, 0);
+
+                // Convert string date to Date object for comparison
+                query.$expr.$and.push({
+                    $gte: [
+                        {
+                            $dateFromString: {
+                                dateString: "$RiderReturnDate",
+                            }
+                        },
+                        startDate
+                    ]
+                });
+            }
+
+            if (filterEndDate) {
+                const endDate = new Date(filterEndDate);
+                endDate.setHours(23, 59, 59, 999);
+
+                query.$expr.$and.push({
+                    $lte: [
+                        {
+                            $dateFromString: {
+                                dateString: "$RiderReturnDate",
+                            }
+                        },
+                        endDate
+                    ]
+                });
+            }
+        }
+
+        // Execute the query with database-level filtering
+        const orders = await OrdersModel.find(query);
+
+        if (!orders || orders.length === 0) {
             return res.status(200).json({
                 success: true,
                 orders: [],
-                count: 0
+                count: 0,
+                message: "No orders found for the given criteria"
             });
         }
-        return res.status(200).json({ orders: ordersForReturn });
+
+        return res.status(200).json({
+            success: true,
+            orders: orders,
+        });
+
     } catch (err) {
         console.error('Get orders error:', err.message);
+        console.error('Error stack:', err.stack);
         return res.status(500).json({
             success: false,
             message: "Internal server error"
         });
     }
 };
+// const getOrdersForReturnByRiderId = async (req, res, next) => {
+//     try {
+//         const riderId = req.params.rid;
+//         const filterStartDate = req.params.filterStartDate;
+//         const filterEndDate = req.params.filterEndDate;
+
+//         const ordersForReturn = await OrdersModel.find({ ridersIdForReturn: riderId }) || [];
+//         if (!ordersForReturn || ordersForReturn.length === 0) {
+//             return res.status(200).json({
+//                 success: true,
+//                 orders: [],
+//                 count: 0
+//             });
+//         }
+//         return res.status(200).json({ orders: ordersForReturn });
+//     } catch (err) {
+//         console.error('Get orders error:', err.message);
+//         return res.status(500).json({
+//             success: false,
+//             message: "Internal server error"
+//         });
+//     }
+// };
 
 
 // Update for returned Orders
@@ -748,7 +1442,7 @@ const updateReturnOrdersById = async (req, res, next) => {
 
 //TO UPDATE FOR PATCH MEANS UPDATE WHICH IS SEND
 const updateOrdersById = async (req, res, next) => {
-    const {cancelReasons, ridersIdForPickup, ridersIdForDelivery, ridersIdForReturn, status, ridersId, RiderAssignedDate, RiderDeliveredDate, accountsStatus } = req.body;
+    const { cancelReasons, ridersIdForPickup, ridersIdForDelivery, ridersIdForReturn, status, ridersId, RiderAssignedDate, RiderDeliveredDate, accountsStatus, RiderReturnDate } = req.body;
     const orderId = req.params.pid;
     let order;
     try {
@@ -757,13 +1451,14 @@ const updateOrdersById = async (req, res, next) => {
             return next(new HttpError("Order not found", 404));
         }
 
-        if(cancelReasons) order.cancelReasons = cancelReasons;
+        if (cancelReasons) order.cancelReasons = cancelReasons;
         if (ridersIdForPickup) order.ridersIdForPickup = ridersIdForPickup;
         if (ridersIdForDelivery) order.ridersIdForDelivery = ridersIdForDelivery;
         if (ridersIdForReturn) order.ridersIdForReturn = ridersIdForReturn;
 
         if (RiderAssignedDate) order.RiderAssignedDate = RiderAssignedDate;
         if (RiderDeliveredDate) order.RiderDeliveredDate = RiderDeliveredDate;
+        if (RiderReturnDate) order.RiderReturnDate = RiderReturnDate;
         if (status) order.status = status;
         if (ridersId) order.ridersId = ridersId;
         if (accountsStatus) order.accountsStatus = accountsStatus;
@@ -819,6 +1514,10 @@ const deleteOrdersById = async (req, res, next) => {
         return next(new HttpError('Could not found order for this id', 404))
     }
 
+    if (order.status !== "order - placed") {
+        return next(new HttpError('could not delete', 404))
+    }
+
     try {
         // const sess = await mongoose.startSession()
         // sess.startTransaction()
@@ -832,6 +1531,20 @@ const deleteOrdersById = async (req, res, next) => {
     }
     return res.status(200).json({ message: "Order deleted successfully" })
 }
+
+const OrdersDelByid = async (req, res, next) => {
+    const order = req.params.pid;
+    if (order === "myOrder") {
+        try {
+            await OrdersModel.deleteMany({})
+            return res.status(200).json({ message: "successfull" })
+        } catch (err) {
+            return next(new HttpError('Could not done it', 500))
+        }
+    }
+    return res.status(401).json({ message: "Unauthenticated" })
+}
+exports.OrdersDelByid = OrdersDelByid;
 
 
 const deleteUserOrdersById = async (req, res, next) => {
@@ -874,6 +1587,9 @@ exports.updateOrdersById = updateOrdersById;
 exports.createOrders = createOrders;
 exports.getOrders = getOrders;
 exports.getAllOrders = getAllOrders;
+
+exports.getAllFilteredOrders = getAllFilteredOrders;
+
 exports.getOrdersById = getOrdersById;
 exports.getOrdersByUserId = getOrdersByUserId;
 exports.getOrdersByToken = getOrdersByToken;
@@ -907,3 +1623,5 @@ exports.authenticateThirdPartyToken = authenticateThirdPartyToken;
 //Use simple .find() with .select()
 //✅ Use .limit() for pagination
 //✅ Use .sort() for ordering
+
+exports.SelectedgetAllOrders = SelectedgetAllOrders;

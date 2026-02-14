@@ -1,3 +1,4 @@
+import { link } from '../backendLink.js';
 import { Dialog, DialogActions, DialogTitle, Button } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
@@ -21,7 +22,7 @@ export default function RidersDeleted() {
             return;
         }
 
-        const data = await fetch('http://localhost:3000/riders/riders-deleted', {
+        const data = await fetch(`${link}/riders/riders-deleted`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -45,7 +46,7 @@ export default function RidersDeleted() {
         return info;
     }
     const { data: apiData, isLoading: ridersLoading, error: ridersError } = useQuery({
-        queryKey: ['riders'],
+        queryKey: ['riders-deleted'],
         queryFn: getRidersLogic,
         retry: 1,
         refetchOnWindowFocus: false,
@@ -77,7 +78,7 @@ export default function RidersDeleted() {
     const confPassRef = useRef(null);
 
     async function addRiderLogic(e) {
-        const data = await fetch('http://localhost:3000/riders/signup', {
+        const data = await fetch(`${link}/riders/signup`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -124,7 +125,7 @@ export default function RidersDeleted() {
                 cnic: "",
             });
             setOpenMenuAddUser(false);
-            queryClient.invalidateQueries({ queryKey: ['riders'] });
+            queryClient.invalidateQueries({ queryKey: ['riders-deleted'] });
         },
         onError: (error) => {
             console.error('Error:', error);
