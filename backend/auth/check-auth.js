@@ -1,3 +1,4 @@
+const jwtTokenSecret = require('../.env');
 const HttpError = require("../models/http-error");
 const jwt = require('jsonwebtoken')
 module.exports = (req, res, next) => {
@@ -6,7 +7,7 @@ module.exports = (req, res, next) => {
         if (!token) { 
             return next(new HttpError('Not Authorized', 401))
         }
-        const decodedToken = jwt.verify(token, 'super-duper-hassan-secret-dont-share')
+        const decodedToken = jwt.verify(token, jwtTokenSecret)
         next()
     } catch (err) {
         return next(new HttpError('Authentication Failed', 401))

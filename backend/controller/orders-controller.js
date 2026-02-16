@@ -1,4 +1,4 @@
-const jwtTokenSecret = require('../.env.js');
+const jwtTokenSecret = require('../.env');
 const OrdersModel = require('../models/orders-model')
 const HttpError = require('../models/http-error')
 

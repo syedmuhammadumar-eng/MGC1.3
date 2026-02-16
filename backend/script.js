@@ -11,10 +11,13 @@ const HttpError = require('./models/http-error')
 const app = express()
 
 const server = http.createServer(app) // ADD THIS
+
+const port = process.env.PORT || 3000;
+
 // Initialize Socket.io
 const io = new Server(server, {
     cors: {
-        origin: ['http://localhost:5173', 'http://localhost:3000'],
+        origin: ['http://localhost:5173', 'http://72.62.70.42:3000/', 'http://mgcourier.com.pk/',],
         methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
         credentials: true
     }
@@ -23,7 +26,7 @@ const io = new Server(server, {
 app.set('socketio', io) // ADD THIS
 
 app.use((req, res, next) => {
-    const allowedOrigins = ['http://localhost:5173', 'http://localhost:3000'];
+    const allowedOrigins = ['http://localhost:5173', 'http://72.62.70.42:3000/', 'http://mgcourier.com.pk/'];
     const origin = req.headers.origin;
     if (allowedOrigins.includes(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin);
@@ -102,66 +105,4 @@ io.on('connection', (socket) => {
 });
 
 
-//app.listen(3000)
-server.listen(3000)
-
-
-
-
-
-
-// const express = require('express')
-// const bodyParser = require('body-parser')
-
-// const ordersRoute = require('./routes/orders-routes')
-// const usersRoute = require('./routes/users-routes')
-// const ridersRoute = require('./routes/riders-routes')
-// const HttpError = require('./models/http-error')
-
-// const app = express()
-
-// app.use((req, res, next) => {
-//     const allowedOrigins = ['http://localhost:5173', 'http://localhost:3000'];
-//     const origin = req.headers.origin;
-//     if (allowedOrigins.includes(origin)) {
-//         res.setHeader('Access-Control-Allow-Origin', origin);
-//     }
-//     res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-//     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS'); // ADDED OPTIONS
-//     res.setHeader('Access-Control-Allow-Credentials', 'true'); // ADD THIS
-//     // Handle OPTIONS method (preflight requests)
-//     if (req.method === 'OPTIONS') {
-//         return res.sendStatus(200); // IMPORTANT: Return 200 for OPTIONS
-//     }
-//     next();
-// });
-
-// app.use(bodyParser.json())
-
-// const mongoose = require('mongoose')
-// const url = require('./mongoose')
-// //CONNECTING
-// mongoose.connect(url).then(() => {
-//     console.log('Connected to db')
-// }).catch(() => {
-//     console.log('Not Connected to db')
-// })
-
-// app.use('/orders', ordersRoute)
-// app.use('/users', usersRoute)
-// app.use('/riders', ridersRoute)
-
-// app.use((req, res, next) => {
-//     const error = new HttpError('could not found route', 404)
-//     throw error;
-// })
-
-// app.use((error, req, res, next) => {
-//     if (res.headerSent) {
-//         return next(error);
-//     }
-//     res.status(error.code || 500)
-//     res.json({ message: error.message || 'unknown error occured' })
-// })
-
-// app.listen(3000)
+server.listen(port)
