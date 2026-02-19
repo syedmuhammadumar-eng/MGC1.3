@@ -80,7 +80,7 @@ export default function AccountsSidebar() {
   };
 
   const menuItems = [
-    { path: "/admin/accounts", label: "Accounts", iconClass: "fa-solid fa-book", queryKey: "ordersAccounts" },
+    { path: "/Accountant", label: "Accounts", iconClass: "fa-solid fa-book", queryKey: "ordersAccounts" },
   ];
 
   return (

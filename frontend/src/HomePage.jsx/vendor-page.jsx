@@ -33,6 +33,7 @@ export default function VendorPage() {
         weight: "",
         CodType: "Cod",
         RemarksText: "",
+        OrderDetails: "",
         // status: "Shipment - Booked",
         // creator: "",
     });
@@ -70,6 +71,7 @@ export default function VendorPage() {
                 weight: formData.weight,
                 CodType: formData.CodType,
                 RemarksText: formData.RemarksText,
+                OrderDetails: formData.OrderDetails,
             })
         })
         if (data?.status === 401) {
@@ -105,6 +107,7 @@ export default function VendorPage() {
                 weight: "",
                 CodType: "Cod",
                 RemarksText: "",
+                OrderDetails: "",
             });
             setOpenMenuAddUser(false);
             toast.success("Please make sure to confirm your order", {
@@ -493,8 +496,11 @@ export default function VendorPage() {
                                             <option value="Normal">Normal</option>
                                             <option value="Fragile">Fragile</option>
                                         </select>
-                                        <label className='text-gray-600 text-[17px]'>Order Date:</label>
-                                        <input required readOnly name="OrderDate" value={formData.OrderDate} type="text" className='text-gray-600 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='' />
+                                        <label className='text-gray-600 text-[17px] hidden!'>Order Date:</label>
+                                        <input required readOnly name="OrderDate" value={formData.OrderDate} type="text" className='text-gray-600 border w-full rounded py-2 pl-3 text-[17px]! hidden!' placeholder='' />
+
+                                        <label className='text-gray-600 text-[17px]'>Order Details:</label>
+                                        <input required name="OrderDetails" value={formData.OrderDetails} onChange={handleChange} type="text" className='text-gray-600 border w-full rounded py-2 pl-3 text-[17px]!' placeholder='Order Details' />
                                     </div>
                                     <div className="w-full! lg:w-[47.5%]!">
                                         <label className='text-gray-600 text-[17px]'>Weight in Kg:</label>
@@ -573,10 +579,10 @@ export default function VendorPage() {
                                             onClose={() => setOpenMenuOrderDetail(false)}
                                             PaperProps={{
                                                 sx: {
-                                                    width: "100%",
-                                                    maxWidth: "900px",
+                                                     width: "100%",
+                                                    maxWidth: "700px",
                                                     margin: "auto",
-                                                    height: "100%"
+                                                    height: "fit-content",
                                                 }
                                             }}
                                         >
@@ -591,7 +597,7 @@ export default function VendorPage() {
                                                     // gap: "1px",
                                                 }}
                                             >
-                                                <div id="divToPrintOnSinglePage" className="">
+                                                {/* <div id="divToPrintOnSinglePage" className="">
                                                     <div className="flex justify-end mb-2 print:hidden">
                                                         <button
                                                             onClick={() => window.print()}
@@ -697,12 +703,175 @@ export default function VendorPage() {
                                                             </tbody>
                                                         </table>
                                                     </div>
+                                                </div> */}
+                                                <div id="divToPrintOnSinglePage" className="max-w-3xl mx-auto bg-white border-2 border-gray-500 text-[10px] font-sans">
+                                                    <div className="flex justify-end mb-2 print:hidden p-2">
+                                                        <button
+                                                            onClick={() => window.print()}
+                                                            className="bg-gray-300 rounded px-4 py-1 text-sm bg-black text-white"
+                                                        >
+                                                            Print
+                                                        </button>
+                                                    </div>
+                                                    <div className="flex items-center justify-between border-b-2 border-gray-500 px-2 py-0.5">
+                                                        <div className="px-1 py-2">
+                                                            <img src="http://localhost:5173/src/assets/MGC.png" className="h-8 object-contain" />
+                                                        </div>
+
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="text-center">
+                                                                <div className="h-5 w-20 font-bold">TRACKING ID:</div>
+                                                            </div>
+
+                                                            <div className="text-center">
+                                                                <div className="h-5 w-32 font-bold">{a?.trackingId}</div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="font-bold">{a?.DeliveryCity} <span className="inline-block text-red-500 rounded-full w-2 h-2 text-5xl -mt-8">.</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid sm:grid-cols-[1.2fr_1fr_0.8fr]">
+
+                                                        <div className="border-r-3 border-gray-500">
+
+                                                            <div className="bg-[#d1d0cc] font-bold border-b-2 border-r-1 border-gray-500 px-1 py-0.5 text-center">
+                                                                Consignee Information
+                                                            </div>
+
+                                                            <div className="grid grid-cols-[70px_240px] border-b-2 border-gray-500">
+                                                                <div className="border-r-2 border-gray-500 p-1 font-semibold">Name:</div>
+                                                                <div className="p-1 font-bold break-words">{a?.CustomerName}</div>
+                                                            </div>
+
+                                                            <div className="grid grid-cols-[70px_240px] border-b-2 border-gray-500">
+                                                                <div className="border-r-2 border-gray-500 p-1 font-semibold">Contact:</div>
+                                                                <div className="p-1 font-bold break-words">{"0" + a?.CustomerContactNo}</div>
+                                                            </div>
+
+                                                            <div className="grid grid-cols-[70px_240px] border-b-2 border-gray-500">
+                                                                <div className="border-r-2 border-gray-500 p-1 font-semibold">Delivery:<br />Address</div>
+                                                                <div className="p-1 font-bold break-words leading-tight">
+                                                                    {a?.DeliveryAddress}
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="bg-[#d1d0cc] font-bold border-b-2  border-r-1 border-gray-500 px-1 py-0.5 text-center">
+                                                                Shipper Information
+                                                            </div>
+
+                                                            <div className="grid grid-cols-[70px_240px] border-b-2 border-gray-500">
+                                                                <div className="border-r-2 border-gray-500 p-1 font-semibold">Name:</div>
+                                                                <div className="p-1 font-bold break-words">{a?.creatorName}</div>
+                                                            </div>
+
+                                                            <div className="grid grid-cols-[70px_240px] border-b-2 border-gray-500">
+                                                                <div className="border-r-2 border-gray-500 p-1 font-semibold">Contact:</div>
+                                                                <div className="p-1 font-bold break-words">{localStorage.getItem("creatorContact") ? "0" + localStorage.getItem("creatorContact") : "not found"}</div>
+                                                            </div>
+
+                                                            <div className="grid grid-cols-[70px_240px] border-b-2 border-gray-500">
+                                                                <div className="border-r-2 border-gray-500 p-1 font-semibold">Pickup:<br />Address</div>
+                                                                <div className="p-1 font-bold break-words">{a?.PickupAddress}</div>
+                                                            </div>
+
+                                                            <div className="grid grid-cols-[70px_240px]  border-gray-500">
+                                                                <div className="border-r-2 border-gray-500 p-1 font-semibold">Return:<br />Address</div>
+                                                                <div className="p-1 font-bold break-words">{a?.PickupAddress}</div>
+                                                            </div>
+
+                                                        </div>
+
+                                                        <div className="border-r-2 border-gray-500 flex flex-col">
+
+                                                            <div className="bg-[#d1d0cc] font-bold border-b-2 border-gray-500 px-1 py-0.5 text-center">
+                                                                Shipment Information
+                                                            </div>
+
+                                                            <div className="grid grid-cols-[70px_1fr] flex-grow">
+
+                                                                {/* <div className="border-b-2 border-r-2 border-gray-500 p-1 font-semibold">Pieces:</div>
+                                                                <div className="border-b-2 border-gray-500 p-1 font-bold">1</div> */}
+
+                                                                <div className="border-b-2 border-r-2 border-gray-500 p-1 font-semibold">Fragility:</div>
+                                                                <div className="border-b-2 border-gray-500 p-1 font-bold">{a?.fragility}</div>
+
+                                                                <div className="border-b-2 border-r-2 border-gray-500 p-1 font-semibold">Dimensions:</div>
+                                                                <div className="border-b-2 border-gray-500 p-1 font-bold break-words">{a?.Dimensions}</div>
+
+                                                                <div className="border-b-2 border-r-2 border-gray-500 p-1 font-semibold">Origin:</div>
+                                                                <div className="border-b-2 border-gray-500 p-1 font-bold">{a?.PickupCity}</div>
+
+                                                                <div className="border-b-2 border-r-2 border-gray-500 p-1 font-semibold">Destinaion:</div>
+                                                                <div className="border-b-2 border-gray-500 p-1 font-bold">{a?.DeliveryCity}</div>
+
+                                                                <div className="border-b-2 border-r-2 border-gray-500 p-1 font-semibold">Return City:</div>
+                                                                <div className="border-b-2 border-gray-500 p-1 font-bold">{a?.DeliveryCity}</div>
+
+                                                                <div className="border-b-2 border-r-2 border-gray-500 p-1 font-semibold">Weight:</div>
+                                                                <div className="border-b-2 border-gray-500 p-1 font-bold">{a?.weight} kg</div>
+
+                                                                <div className="border-r-2 border-gray-500 p-1 font-semibold">Remarks Text:</div>
+                                                                <div className="p-1 font-bold break-words flex items-start">
+                                                                    {a?.RemarksText ? a?.RemarksText : "N/A"}
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                        <div>
+
+                                                            <div className="bg-[#d1d0cc] font-bold border-b-2 border-gray-500 px-1 py-0.5 text-center">
+                                                                Order Information
+                                                            </div>
+
+                                                            <div className="flex justify-center items-center border-b-2 border-gray-500 pt-4 pb-4">
+                                                                {/* <div className="w-20 h-20 border-4 border-black"></div> */}
+                                                                <QRCodeSVG
+                                                                    // className='w-[100px] h-[100px] sm:w-90 sm:h-90 md:w-110 md:h-100'
+                                                                    className='w-20 h-20'
+                                                                    value={a?.trackingId}
+                                                                    bgColor="#ffffff"
+                                                                    fgColor="#000000"
+                                                                    size={190}
+                                                                    level="H"  // error correction level (L, M, Q, H)
+                                                                    includeMargin={true}
+                                                                />
+                                                            </div>
+
+                                                            <div className="grid grid-cols-[70px_1fr]">
+
+                                                                <div className="border-b-2 border-r-2 border-gray-500 p-1 font-semibold">Amount:</div>
+                                                                <div className="border-b-2 border-gray-500 p-1 font-bold">{a?.OrderAmount ? a?.OrderAmount + " Rs" : "non-cod"}</div>
+
+                                                                <div className="border-b-2 border-r-2 border-gray-500 p-1 font-semibold">Date:</div>
+                                                                <div className="border-b-2 border-gray-500 p-1 font-bold">{a?.OrderDate}</div>
+
+                                                                <div className="border-b-2 border-r-2 border-gray-500 p-1 font-semibold">Order Type:</div>
+                                                                <div className="border-b-2 border-gray-500 p-1 font-bold">{a?.OrderType}</div>
+
+                                                                <div className=" border-r-2 border-gray-500 p-1 font-semibold">Type:</div>
+                                                                <div className=" border-gray-500 p-1 font-bold">{a?.CodType}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-[70px_240px] border-t-2 border-gray-500">
+                                                        <div className="border-r-2 border-gray-500 p-1 font-semibold">
+                                                            Order<br />Details:
+                                                        </div>
+                                                        <div className="p-1 font-bold break-words">
+                                                            {a?.OrderDetails ? a?.OrderDetails : "N/A"}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </DialogTitle>
                                         </Dialog>
                                     </td>
-                                    <td className="py-[2%] px-2 text-center text-nowrap font-semibold! text-md" style={{ color: (a?.status === "order - placed") ? "red" : "green" }}>{a?.status}</td>
-                                    <td className="py-[2%] text-center text-nowrap font-semibold! text-md">
+                                    <td className="p-2 px-2 text-center text-nowrap font-semibold! text-md" style={{ color: (a?.status === "order - placed") ? "red" : "green" }}>{a?.status}</td>
+                                    <td className="p-2 text-center text-nowrap font-semibold! text-md">
                                         <button
                                             disabled={a?.status !== "order - placed"}
                                             onClick={() => { deleteOrderFun(a?._id) }}

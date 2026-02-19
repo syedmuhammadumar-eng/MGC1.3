@@ -108,7 +108,7 @@ export default function AssignedOrders() {
     }
 
     return (
-        <div className=" overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-2 justify-start items-start w-screen h-auto">
+        <div className="w-[90%]  overflow-y-scroll rounded-2xl bg-gray-100 flex flex-col gap-4 pl-3 pr-2 pt-3 pb-1 justify-start items-start h-auto">
 
             <div className="flex items-center justify-between w-full">
                 <h4 className='ml-4'>Assigned Orders</h4>
@@ -169,7 +169,7 @@ export default function AssignedOrders() {
                     </div>
                 </>
                 :
-                <h1 className='ml-4'>No Order Found</h1>
+                <h6 className='ml-4 text-[12px]'>No Order Found</h6>
             }
         </div>
     )

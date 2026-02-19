@@ -166,7 +166,7 @@ export default function VendorsManagement() {
                     filteredData?.length !== 0 ?
                         filteredData?.map((a) => (
                             <>
-                                <div onClick={() => navigate(`/admin/vendors-management/${a?._id}/${a?.CompanyName}`)} className='bg-gray-50 cursor-pointer flex justify-between items-center mb-3! shadow shadow-black/30 py-3 pl-2 rounded'>
+                                <div onClick={() => navigate(`/manager/vendors-management/${a?._id}/${a?.CompanyName}`)} className='bg-gray-50 cursor-pointer flex justify-between items-center mb-3! shadow shadow-black/30 py-3 pl-2 rounded'>
                                     <div className='flex items-center'>
                                         <div className='mr-10 bg-blue-900 rounded-[50%] h-20 w-20 flex justify-center items-center'>
                                             <h2 className="p-4 text-center text-nowrap">{a?.CompanyName[0]?.toUpperCase()}</h2>

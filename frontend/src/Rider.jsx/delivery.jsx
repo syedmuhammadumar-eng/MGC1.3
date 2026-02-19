@@ -216,7 +216,7 @@ export default function Delivery() {
     }
 
     return (
-        <div className=" overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-2 justify-start items-start w-screen h-auto">
+        <div className=" overflow-y-scroll bg-gray-100 flex flex-col gap-4 pl-3 pr-2 pt-3 pb-1 rounded-2xl justify-start items-start w-[90%] h-auto">
 
             <div className="flex items-center justify-between w-full">
                 <h4 className='ml-4'>Assigned Orders To Deliver</h4>
@@ -408,7 +408,7 @@ export default function Delivery() {
                     </div>
                 </>
                 :
-                <h1 className='ml-4'>No Order Found To Deliver</h1>
+                <h6 className='ml-4 text-[12px]'>No Order Found To Deliver</h6>
             }
         </div>
     )

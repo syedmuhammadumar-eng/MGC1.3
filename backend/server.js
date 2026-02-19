@@ -3,6 +3,8 @@ const bodyParser = require('body-parser')
 const http = require('http') // ADD THIS
 const { Server } = require('socket.io') // ADD THIS
 
+require('dotenv').config();
+
 const ordersRoute = require('./routes/orders-routes')
 const usersRoute = require('./routes/users-routes')
 const ridersRoute = require('./routes/riders-routes')
@@ -12,12 +14,12 @@ const app = express()
 
 const server = http.createServer(app) // ADD THIS
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4000;
 
 // Initialize Socket.io
 const io = new Server(server, {
     cors: {
-        origin: ['http://localhost:5173', 'http://72.62.70.42:3000/', 'http://mgcourier.com.pk/',],
+        origin: ['http://localhost:5173', 'http://72.62.70.42:4000', 'http://mgcourier.com.pk', 'http://api.mgcourier.com.pk', 'http://localhost:4000'],
         methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
         credentials: true
     }
@@ -26,7 +28,7 @@ const io = new Server(server, {
 app.set('socketio', io) // ADD THIS
 
 app.use((req, res, next) => {
-    const allowedOrigins = ['http://localhost:5173', 'http://72.62.70.42:3000/', 'http://mgcourier.com.pk/'];
+    const allowedOrigins = ['http://localhost:5173', 'http://72.62.70.42:4000', 'http://mgcourier.com.pk', 'http://api.mgcourier.com.pk', 'http://localhost:4000'];
     const origin = req.headers.origin;
     if (allowedOrigins.includes(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin);

@@ -75,7 +75,7 @@ export default function OrdersWithRider() {
     }
 
     return (
-        <div className=" overflow-y-scroll bg-gray-100 flex flex-col gap-4 p-2 justify-start items-start w-screen h-auto">
+        <div className="overflow-y-scroll bg-gray-100 flex flex-col gap-4 pl-3 pr-2 pt-3 pb-1 rounded-2xl justify-start items-start w-[90%] h-auto">
             <div className="bg-white px-[2%] py-[2%] text-center rounded flex items-center justify-start w-full">
                 <label htmlFor="search"><i className="fas fa-search text-gray-400 m-0 p-0"></i></label>
                 <input onChange={(e) => setSearchTerm(e.target.value)} id="search" className="rounded pl-2 w-full focus:outline-0 text-md! font-medium" type="search" placeholder="Search ...." />
@@ -124,7 +124,7 @@ export default function OrdersWithRider() {
                 </div>
             )
                 :
-                <h1>No Result</h1>
+                <h6 className='ml-4 text-[12px]'>No Result</h6>
             }
         </div>
     )

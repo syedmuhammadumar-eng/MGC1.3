@@ -60,7 +60,7 @@ export default function RidersDetails() {
         // console.log(info)
     }
     const { data: ridersData, isLoading: dataLoading, error: dataError, isFetching } = useQuery({
-        queryKey: ['ridersDetail'],
+        queryKey: ['riders-details'],
         queryFn: ridersLogic,
         retry: 1,
         refetchOnWindowFocus: false,
@@ -958,7 +958,7 @@ export default function RidersDetails() {
         onSuccess: (data, variables) => {
             console.log(data)
             queryClient.invalidateQueries({ queryKey: ['riders-details'] });
-            navigate('/admin/riders')
+            navigate('/manager/riders')
         },
         onError: (error) => {
             console.error('Error assigning rider:', error);

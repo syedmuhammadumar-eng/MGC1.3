@@ -58,7 +58,7 @@ export default function EmployeManagement() {
         ContactNo: "",
         EmailAddress: "",
         password: "",
-        status: "",
+        status: "manager",
     });
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -98,7 +98,8 @@ export default function EmployeManagement() {
             return;
         }
         if (!data?.ok) {
-            throw new Error(`HTTP error! status: ${data.status}`);
+            const res =await data.json();
+            throw new Error(`${res?.message}`);
         }
     }
     const addRiderMutation = useMutation({
@@ -290,7 +291,7 @@ export default function EmployeManagement() {
                     filteredData?.length !== 0 ?
                         filteredData?.map((a) => (
                             <>
-                                <div className='bg-gray-50 flex justify-between items-center mb-3! shadow shadow-black/30 py-3 pl-2 rounded'>
+                                <div className='px-10! bg-gray-50 flex justify-between items-center mb-3! shadow shadow-black/30 py-3 pl-2 rounded-xl'>
                                     <div className='flex items-center justify-between! w-full'>
                                         <div className='flex items-center'>
                                             <div className='mr-10 bg-blue-900 rounded-[50%] h-20 w-20 flex justify-center items-center'>

@@ -329,19 +329,19 @@ export default function RiderScanOrders() {
     ];
 
     return (
-        <div className=" bg-gray-100 flex flex-col gap-4 p-4 mt-2 w-screen h-auto">
+        <div className=" bg-gray-100 flex flex-col gap-4 pr-[1%] pl-[1%] w-[90%] overflow-y-scroll rounded-2xl h-auto m-8">
 
             <ToastContainer
                 pauseOnHover
             />
 
-            <div className="flex items-center! justify-between w-full">
+            <div className="flex items-center! justify-between w-full p-0! h-10!">
                 <form className='w-full' onSubmit={submitFun}>
                     <input onChange={(e) => setInputTrackingId(e.target.value)} id="search" className="rounded pl-2 w-[150px] sm:w-full focus:outline-0 text-md! font-medium" type="search" placeholder="Scan, by entering tracking Id" />
                 </form>
                 <button
                     onClick={handleClick}
-                    className="bg-[#d10115] text-white font-bold py-3 px-4 rounded w-[20%]"
+                    className="bg-[#d10115] text-white font-bold py-3 px-4 rounded w-[20%] text-nowrap! flex items-center justify-center px-15! m-0!"
                 >
                     Scan QR Code
                 </button>

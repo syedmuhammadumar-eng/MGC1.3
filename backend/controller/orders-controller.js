@@ -1,4 +1,6 @@
-const jwtTokenSecret = require('../.env');
+// const jwtTokenSecret = require('../.env');
+const jwtTokenSecret = process.env.jwtTokenSecret || "super-duper-secret";
+
 const OrdersModel = require('../models/orders-model')
 const HttpError = require('../models/http-error')
 
@@ -243,7 +245,7 @@ const authenticateThirdPartyToken = async (req, res, next) => {
 
 //CREATING DATA
 const createOrders = async (req, res, next) => {
-    const { OrderType, OrderAmount, CustomerName, DeliveryCity, PickupCity, OrderDate, CustomerContactNo, DeliveryAddress, PickupAddress, Dimensions, fragility, weight, CodType, RemarksText } = req.body;
+    const { OrderDetails, OrderType, OrderAmount, CustomerName, DeliveryCity, PickupCity, OrderDate, CustomerContactNo, DeliveryAddress, PickupAddress, Dimensions, fragility, weight, CodType, RemarksText } = req.body;
 
     const authHeader = req.headers['authorization'];
     if (!authHeader) {
@@ -281,6 +283,8 @@ const createOrders = async (req, res, next) => {
         CustomerName,
         DeliveryCity,
         PickupCity,
+
+        OrderDetails,
 
         fragility,
         weight,
@@ -341,7 +345,7 @@ const createOrders = async (req, res, next) => {
 
 
 const createVendorOrders = async (req, res, next) => {
-    const { OrderType, OrderAmount, CustomerName, DeliveryCity, PickupCity, OrderDate, CustomerContactNo, DeliveryAddress, PickupAddress, Dimensions, fragility, weight, CodType, RemarksText } = req.body;
+    const { OrderDetails, OrderType, OrderAmount, CustomerName, DeliveryCity, PickupCity, OrderDate, CustomerContactNo, DeliveryAddress, PickupAddress, Dimensions, fragility, weight, CodType, RemarksText } = req.body;
 
     let creatorId = req.params.vid;
     let creatorName = req.params.vendorName;
@@ -364,6 +368,8 @@ const createVendorOrders = async (req, res, next) => {
         CustomerName,
         DeliveryCity,
         PickupCity,
+
+        OrderDetails,
 
         fragility,
         weight,
@@ -748,7 +754,7 @@ const getOrdersByStatusOrdersRiderDelivered = async (req, res, next) => {
         const filterStartDate = req.query.filterStartDate;
         const filterEndDate = req.query.filterEndDate;
 
-        const query = { status: "Return - Rider Delivered", accountsStatus: ""  };
+        const query = { status: "Return - Rider Delivered", accountsStatus: "" };
 
         if (filterStartDate || filterEndDate) {
             query.$expr = {
@@ -844,7 +850,7 @@ const getOrdersByStatusOrdersRiderDeliveredAmountPicked = async (req, res, next)
         const filterStartDate = req.query.filterStartDate;
         const filterEndDate = req.query.filterEndDate;
 
-        const query = { status: "Return - Rider Delivered", accountsStatus: "Amount - Picked From Rider"  };
+        const query = { status: "Return - Rider Delivered", accountsStatus: "Amount - Picked From Rider" };
 
         if (filterStartDate || filterEndDate) {
             query.$expr = {

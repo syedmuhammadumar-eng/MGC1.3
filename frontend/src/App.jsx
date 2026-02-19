@@ -5,16 +5,16 @@ import Layout from './HomePage.jsx/layout'
 import Section1 from './HomePage.jsx/section1'
 import AdminPage1 from './Admin/AdminPage'
 import AdminLayout from './Admin/AdminLayout'
-import Riders from './Admin/Riders'
-import UnassignedOrders from './Admin/UnassignedOrders'
-import UnapprovedUsers from './Admin/UnapprovedUsers'
-import Users from './Admin/Users'
-import Orders from './Admin/Orders'
-import WarehouseScanner from './Admin/WarehouseScanner'
-import OrdersAtWarehouse from './Admin/OrdersAtWarehouse'
-import CancelManagement from './Admin/CancelManagement'
-import DeliveryManagement from './Admin/DeliveryManagement'
-import InvoiceReport from './Admin/InvoiceReport'
+import Riders from './Manager/Riders'
+import UnassignedOrders from './Manager/UnassignedOrders'
+import UnapprovedUsers from './Manager/UnapprovedUsers'
+import Users from './Manager/Users'
+import Orders from './Manager/Orders'
+import WarehouseScanner from './Manager/WarehouseScanner'
+import OrdersAtWarehouse from './Manager/OrdersAtWarehouse'
+import CancelManagement from './Manager/CancelManagement'
+import DeliveryManagement from './Manager/DeliveryManagement'
+import InvoiceReport from './Manager/InvoiceReport'
 import OrderForm from './HomePage.jsx/OrderForm'
 import RiderPage from './Rider.jsx/RiderPage'
 import RiderLayout from './Rider.jsx/RiderLayout'
@@ -26,18 +26,18 @@ import Signup from './Auth/signup'
 import Login from './Auth/login'
 import ContactUs from './HomePage.jsx/contactUs'
 import AboutUs from './HomePage.jsx/aboutUs'
-import RidersDetails from './Admin/riders-details'
-import UsersDetail from './Admin/users-details'
-import OrdersCancelledByVendor from './Admin/vendor-cancelled'
+import RidersDetails from './Manager/riders-details'
+import UsersDetail from './Manager/users-details'
+import OrdersCancelledByVendor from './Manager/vendor-cancelled'
 import Delivery from './Rider.jsx/delivery'
 import Return from './Rider.jsx/return'
 import Accounts from './Admin/Accounts'
 import AccountantAccounts from './Accountant/Accounts'
-import VendorsManagement from './Admin/VendorsManagement'
+import VendorsManagement from './Manager/VendorsManagement'
 import VendorPage from './HomePage.jsx/vendor-page'
-import VendorDetails from './Admin/vendors-details'
+import VendorDetails from './Manager/vendors-details'
 import FormLoader from './HomePage.jsx/loader'
-import RidersDeleted from './Admin/deleted-riders'
+import RidersDeleted from './Manager/deleted-riders'
 import AccountsLayout from './Accountant/AccountsLayout'
 import EmployeManagement from './Admin/EmployeManagement'
 import ManagerLayout from './Manager/ManagerLayout'
@@ -60,7 +60,7 @@ function App() {
       {/* -------------Admin Routes--------------------------- */}
       <Route path='/admin' element={<AdminLayout />}>
         <Route index element={<AdminPage1 />} />
-        <Route path='riders' element={<Riders />} />
+        {/* <Route path='riders' element={<Riders />} />
         <Route path='deleted-riders' element={<RidersDeleted />} />
         <Route path='vendors-management' element={<VendorsManagement />} />
         <Route path='vendors-management/:vid/:vendorName' element={<VendorDetails />} />
@@ -76,7 +76,7 @@ function App() {
         <Route path='cancel-management' element={<CancelManagement />} />
         <Route path='return-management' element={<DeliveryManagement />} />
         <Route path='invoice-report' element={<InvoiceReport />} />
-        <Route path='accounts' element={<Accounts />} />
+        <Route path='accounts' element={<Accounts />} /> */}
         <Route path='employe-management' element={<EmployeManagement />} />
       </Route>
 

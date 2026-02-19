@@ -315,7 +315,7 @@ export default function Riders() {
                     filteredData?.length !== 0 ?
                         filteredData?.map((a) => (
                             <>
-                                <div onClick={() => navigate(`/admin/riders/${a?._id}`)} className='bg-gray-50 cursor-pointer flex justify-between items-center mb-3! shadow shadow-black/30 py-3 pl-2 rounded'>
+                                <div onClick={() => navigate(`/manager/riders/${a?._id}`)} className='bg-gray-50 cursor-pointer flex justify-between items-center mb-3! shadow shadow-black/30 py-3 pl-2 rounded'>
                                     <div className='flex items-center justify-between! w-full'>
                                         <div className='flex items-center'>
                                             <div className='mr-10 bg-blue-900 rounded-[50%] h-20 w-20 flex justify-center items-center'>

@@ -1,4 +1,5 @@
-const jwtTokenSecret = require('../.env');
+// const jwtTokenSecret = require('../.env');
+const jwtTokenSecret = process.env.jwtTokenSecret || "super-duper-secret";
 const UserModel = require('../models/user-model')
 const HttpError = require('../models/http-error');
 const OrdersModel = require('../models/orders-model');

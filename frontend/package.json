@@ -20,6 +20,7 @@
     "bootstrap": "^5.3.8",
     "chart.js": "^4.5.1",
     "chartjs-chart-geo": "^4.3.6",
+    "dotenv": "^17.3.1",
     "jspdf": "^3.0.4",
     "motion": "^12.23.24",
     "qrcode.react": "^4.2.0",

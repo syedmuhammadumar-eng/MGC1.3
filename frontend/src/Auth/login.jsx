@@ -40,6 +40,7 @@ export default function Login() {
             navigate('/order-form')
             setOpenMenuLogin(false);
             localStorage.setItem("name", data?.name);
+            localStorage.setItem("creatorContact", data?.PhoneNo);
         }
         if (data?.message === "rider") {
             navigate('/rider')
@@ -49,6 +50,7 @@ export default function Login() {
             navigate('/vendor-page')
             setOpenMenuLogin(false);
             localStorage.setItem("name", data?.name);
+            localStorage.setItem("creatorContact", data?.PhoneNo);
         }
         if (data?.message === "accountant") {
             navigate('/Accountant')

@@ -1,4 +1,5 @@
-const jwtTokenSecret = require('../.env');
+// const jwtTokenSecret = require('../.env');
+const jwtTokenSecret = process.env.jwtTokenSecret || "super-duper-secret";
 const HttpError = require("../models/http-error");
 const jwt = require('jsonwebtoken')
 module.exports = (req, res, next) => {

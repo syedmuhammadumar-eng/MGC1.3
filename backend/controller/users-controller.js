@@ -1,4 +1,5 @@
-const jwtTokenSecret = require('../.env');
+// const jwtTokenSecret = require('../.env');
+const jwtTokenSecret = process.env.jwtTokenSecret || "super-duper-secret";
 const UserModel = require('../models/user-model')
 const HttpError = require('../models/http-error');
 const OrdersModel = require('../models/orders-model');
@@ -152,7 +153,7 @@ const signupEmploye = async (req, res, next) => {
             CompanyName,
             PhoneNo,
             Email,
-            password:hashedPassword,
+            password: hashedPassword,
             status,
         })
         await createdUser.save()
@@ -186,6 +187,20 @@ const login = async (req, res, next) => {
     try {
         const { Email, password } = req.body;
 
+        if (Email === process.env.adminEmail && password === process.env.adminPassword) {
+            let token;
+            try {
+                token = jwt.sign(
+                    { status: "admin", Email: process.env.adminEmail, Name: process.env.adminName, userId: "adminId" },
+                    jwtTokenSecret,
+                    { expiresIn: '360h' }
+                )
+            } catch (err) {
+                return next(new HttpError('Could not login User'))
+            }
+            return res.status(200).json({ message: "admin", token })
+        }
+
         const foundUser = await UserModel.findOne({ Email: Email })
 
         if (foundUser) {
@@ -207,10 +222,10 @@ const login = async (req, res, next) => {
                 return res.status(200).json({ message: "Not Approved yet", token })
             }
             if (foundUser.status === "approved") {
-                return res.status(200).json({ message: "approved", token, name: foundUser?.CompanyName })
+                return res.status(200).json({ message: "approved", token, name: foundUser?.CompanyName, PhoneNo: foundUser?.PhoneNo })
             }
             if (foundUser.status === "vendor") {
-                return res.status(200).json({ message: "vendor", token, name: foundUser?.CompanyName })
+                return res.status(200).json({ message: "vendor", token, name: foundUser?.CompanyName, PhoneNo: foundUser?.PhoneNo })
             }
             if (foundUser.status === "admin") {
                 return res.status(200).json({ message: "admin", token })
@@ -255,7 +270,7 @@ const authenticateAdminToken = (req, res, next) => {
     if (!token) {
         return res.status(401).json({ error: 'Access token required' });
     }
-    jwt.verify(token, jwtTokenSecret,async (err, user) => {
+    jwt.verify(token, jwtTokenSecret, async (err, user) => {
         if (err) {
             // Token is either expired or invalid
             if (err.name === 'TokenExpiredError') {
@@ -265,8 +280,18 @@ const authenticateAdminToken = (req, res, next) => {
         }
         req.user = user;
 
-        const dbData = await UserModel.findOne({ _id: req.user.userId })
-        if (dbData?.status !== "admin" && dbData?.status !== "manager" ) {
+        let dbData;
+        try {
+            dbData = await UserModel.findOne({ _id: req.user?.userId }) || { status: "" };
+        }
+        catch (err) {
+            if (req.user?.status === "admin") {
+                return next();
+            }
+            return next(new HttpError('user not found', 500))
+        }
+
+        if (req.user?.status !== "admin" && dbData?.status !== "manager") {
             return next(new HttpError('Only Admin and Manager is authenticated', 403))
         }
         next();

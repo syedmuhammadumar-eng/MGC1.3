@@ -10,7 +10,9 @@ const ordersSchema = new mongoose.Schema({
     fragility: { type: String, required: false },
     weight: { type: Number, required: false },
 
-    OrderDate: { type: String, required: false },
+    OrderDetails: { type: String, required: false },
+
+    OrderDate: { type: String, required: true },
     RiderAssignedDate: { type: String, required: false },
     RiderDeliveredDate: { type: String, required: false },
     RiderReturnDate :{ type: String, required: false },
