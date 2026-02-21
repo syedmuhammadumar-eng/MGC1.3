@@ -124,7 +124,7 @@ export default function DeliveryManagement() {
         mutationFn: assignRiderLogic,
         onSuccess: () => {
             setOpenMenuAssignRider(false);
-            queryClient.invalidateQueries({ queryKey: ['ordersToReturn'] });
+            queryClient.invalidateQueries({ queryKey: ['ordersToDeliver'] });
             toast.success(`Assigned successfully`, {
                 position: "top-right",
                 autoClose: 3000,

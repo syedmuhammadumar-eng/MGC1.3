@@ -19,7 +19,7 @@ const port = process.env.PORT || 4000;
 // Initialize Socket.io
 const io = new Server(server, {
     cors: {
-        origin: ['http://localhost:5173', 'http://72.62.70.42:4000', 'https://mgcourier.com.pk', 'http://mgcourier.com.pk', 'http://api.mgcourier.com.pk', 'https://api.mgcourier.com.pk', 'http://localhost:4000'],
+        origin: ['http://localhost:5173','http://localhost:4000'],
         methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
         credentials: true
     }
@@ -28,7 +28,7 @@ const io = new Server(server, {
 app.set('socketio', io) // ADD THIS
 
 app.use((req, res, next) => {
-    const allowedOrigins = ['http://localhost:5173', 'http://72.62.70.42:4000', 'https://mgcourier.com.pk', 'http://mgcourier.com.pk', 'http://api.mgcourier.com.pk', 'https://api.mgcourier.com.pk', 'http://localhost:4000'];
+    const allowedOrigins = ['http://localhost:5173','http://localhost:4000'];
     const origin = req.headers.origin;
     if (allowedOrigins.includes(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin);

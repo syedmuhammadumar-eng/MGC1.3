@@ -49,7 +49,7 @@ export default function AccomplishementCounter() {
                 <div className="flex flex-wrap w-full! lg:w-[60%]! xl:w-full! 2xl:w-full! justify-center xl:justify-center">
                     <div className="mt-19! grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1">
                         <div className="pb-5 rounded flex flex-col items-center w-[250px] sm:w-82! h-100">
-                            <img className="py-4 px-3 -mt-19 w-[188px] h-[183px]" src="https://freepngimg.com/save/136388-international-dollar-banknote-currency-hd-image-free/512x321" alt="" />
+                            <img className="py-4 px-3 -mt-19 w-[188px] h-[183px]" src="https://res.cloudinary.com/djifqest9/image/upload/v1771571324/pngwing.com_iutrdj.png" alt="" />
                             <h3 className="font-extrabold!">{cashCounter.toLocaleString()}</h3>
                             <h3 className="font-bold!">Cash Handled</h3>
                             <p className="m-0 text-center w-80">We strongly support best practice sharing across our operations around the world and across various industrial sectors.</p>

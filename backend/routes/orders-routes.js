@@ -37,9 +37,8 @@ router.get('/orders-at-warehouse', userControllers.authenticateAdminToken, order
 router.get('/orders-rider-delivered', userControllers.authenticateAdminToken, ordersControllers.getOrdersByStatusOrdersRiderDelivered)
 router.get('/orders-rider-delivered/Amount-Delivered', userControllers.authenticateAdminToken, ordersControllers.getOrdersByStatusOrdersRiderDeliveredAmountPicked)
 
-
-router.get('/accountant/orders-rider-delivered', ordersControllers.authenticateAccountantToken, ordersControllers.getOrdersByStatusOrdersRiderDelivered)
-router.get('/accountant/orders-rider-delivered/Amount-Delivered', ordersControllers.authenticateAccountantToken, ordersControllers.getOrdersByStatusOrdersRiderDeliveredAmountPicked)
+router.get('/accountant/orders-rider-delivered', ordersControllers.authenticateAccountantToken, ordersControllers.getAccountantOrdersByStatusOrdersRiderDelivered)
+router.get('/accountant/orders-rider-delivered-Amount-Delivered', ordersControllers.authenticateAccountantToken, ordersControllers.getAccountantOrdersByStatusOrdersRiderDeliveredAmountPicked)
 
 router.get('/orders-cancelled-by-vendor', userControllers.authenticateAdminToken, ordersControllers.getOrdersByStatusCancelledByVendor)
 

@@ -25,11 +25,21 @@ export default function Accounts() {
         return today;
     }
 
+    const getYesterdayDateToReturn = () => {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        return yesterday.toISOString().split('T')[0];
+    };
+    const getTodayDateToReturn = () => {
+        const today = new Date().toISOString().split('T')[0];
+        return today;
+    }
+
     const [filterStartDate, setFilterStartDate] = useState(getYesterdayDate())
     const [filterEndDate, setFilterEndDate] = useState(getTodayDate())
 
-    const [filterStartDateReturnToVendor, setFilterStartDateReturnToVendor] = useState(getYesterdayDate())
-    const [filterEndDateReturnToVendor, setFilterEndDateReturnToVendor] = useState(getTodayDate())
+    const [filterStartDateReturnToVendor, setFilterStartDateReturnToVendor] = useState(getYesterdayDateToReturn())
+    const [filterEndDateReturnToVendor, setFilterEndDateReturnToVendor] = useState(getTodayDateToReturn())
 
 
     async function getOrders() {
@@ -75,7 +85,7 @@ export default function Accounts() {
             navigate('/');
             return;
         }
-        const data = await fetch(`${link}/orders/accountant/orders-rider-delivered/Amount-Delivered?filterStartDate=${filterStartDateReturnToVendor}&filterEndDate=${filterEndDateReturnToVendor}`, {
+        const data = await fetch(`${link}/orders/accountant/orders-rider-delivered-Amount-Delivered?filterStartDate=${filterStartDateReturnToVendor}&filterEndDate=${filterEndDateReturnToVendor}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -633,7 +643,7 @@ export default function Accounts() {
 
 
 
-    async function updateAccStatusLogic({orderId,status}) {
+    async function updateAccStatusLogic({ orderId, status, queryKey }) {
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/');
@@ -664,8 +674,8 @@ export default function Accounts() {
     }
     const updateAccStatusMutation = useMutation({
         mutationFn: updateAccStatusLogic,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['ordersAccount'] });
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries({ queryKey: [variables.queryKey] });
         },
         onError: (error) => {
             console.error('Error assigning rider:', error);
@@ -679,8 +689,8 @@ export default function Accounts() {
             })
         }
     })
-    function updateAccStatusFun(orderId, status) {
-        updateAccStatusMutation.mutate({ orderId, status });
+    function updateAccStatusFun(orderId, status, queryKey) {
+        updateAccStatusMutation.mutate({ orderId, status, queryKey });
     }
 
     // Loading state
@@ -756,14 +766,17 @@ export default function Accounts() {
                                 <input onChange={(e) => setSearchTerm(e.target.value)} id="search" className="rounded pl-2 w-[150px] sm:w-full focus:outline-0 text-md! font-medium" type="search" placeholder="Search by rider name" />
                             </div>
                             <div className="flex flex-col md:flex-row items-center justify-between">
-                                <h2>{filterStartDate !== "" || filterEndDate !== "" ? filterStartDate + " to " + filterEndDate : "All Orders"}</h2>
-                                <button onClick={generatePDF} className="bg-green-600 rounded text-white p-2">Generate PDF</button>
+                                <h5>{filterStartDate !== "" || filterEndDate !== "" ? filterStartDate + " to " + filterEndDate : "All Orders"}</h5>
+                                <div className='bg-gray-200 rounded p-2'>
+                                    {"Total Amount:" + " " + filteredData.reduce((sum, order) => sum + (parseFloat(order?.OrderAmount) || 0), 0)} Rs
+                                </div>
+                                <button onClick={generatePDF} className="bg-blue-600 rounded text-white p-2">Generate PDF</button>
                                 <div className="flex items-center gap-2">
                                     <label className="text-red-500 font-bold">Set Filter : </label>
                                     <h5 className="m-0 p-0">from</h5>
-                                    <input className="bg-blue-200 rounded" type="date" value={filterStartDate} onChange={(e) => {setFilterStartDate(e.target.value), queryClient.invalidateQueries('ordersAccounts')}} />
+                                    <input className="bg-blue-200 rounded" type="date" value={filterStartDate} onChange={(e) => { setFilterStartDate(e.target.value), queryClient.invalidateQueries('ordersAccounts') }} />
                                     <h5 className="m-0 p-0">to</h5>
-                                    <input className="bg-red-200 rounded" type="date" value={filterEndDate} onChange={(e) => {setFilterEndDate(e.target.value), queryClient.invalidateQueries('ordersAccounts')}} />
+                                    <input className="bg-red-200 rounded" type="date" value={filterEndDate} onChange={(e) => { setFilterEndDate(e.target.value), queryClient.invalidateQueries('ordersAccounts') }} />
                                 </div>
                             </div>
                             <div className='w-full h-auto overflow-scroll'>
@@ -789,7 +802,7 @@ export default function Accounts() {
                                                     <td className="p-4 text-center text-nowrap">{a?.trackingId}</td>
                                                     <td className="p-4 text-center text-nowrap">
                                                         <button
-                                                            onClick={() => updateAccStatusFun(a?._id, 'Amount - Picked From Rider')}
+                                                            onClick={() => updateAccStatusFun(a?._id, 'Amount - Picked From Rider', 'ordersAccounts')}
                                                             className="bg-red-500 text-white rounded p-2"
                                                         >
                                                             Confirm
@@ -813,14 +826,17 @@ export default function Accounts() {
                                 <input onChange={(e) => setSearchTermReturnToVendor(e.target.value)} id="search" className="rounded pl-2 w-[150px] sm:w-full focus:outline-0 text-md! font-medium" type="search" placeholder="Search by Sender Name" />
                             </div>
                             <div className="flex flex-col md:flex-row items-center justify-between">
-                                <h2>{filterStartDateReturnToVendor !== "" || filterEndDateReturnToVendor !== "" ? filterStartDateReturnToVendor + " to " + filterEndDateReturnToVendor : "All Orders"}</h2>
-                                <button onClick={generatePDFReturnToVendor} className="bg-green-600 rounded text-white p-2">Generate PDF</button>
+                                <h5>{filterStartDateReturnToVendor !== "" || filterEndDateReturnToVendor !== "" ? filterStartDateReturnToVendor + " to " + filterEndDateReturnToVendor : "All Orders"}</h5>
+                                <div className='bg-gray-200 rounded p-2'>
+                                    {"Total Amount:" + " " + filteredDataReturnToVendor.reduce((sum, order) => sum + (parseFloat(order?.OrderAmount) || 0), 0)} Rs
+                                </div>
+                                <button onClick={generatePDFReturnToVendor} className="bg-blue-600 rounded text-white p-2">Generate PDF</button>
                                 <div className="flex items-center gap-2">
                                     <label className="text-red-500 font-bold">Set Filter : </label>
                                     <h5 className="m-0 p-0">from</h5>
-                                    <input className="bg-blue-200 rounded" type="date" value={filterStartDateReturnToVendor} onChange={(e) => {setFilterStartDateReturnToVendor(e.target.value), queryClient.invalidateQueries('ordersAccountsReturnToSender')}} />
+                                    <input className="bg-blue-200 rounded" type="date" value={filterStartDateReturnToVendor} onChange={(e) => { setFilterStartDateReturnToVendor(e.target.value), queryClient.invalidateQueries('ordersAccountsReturnToSender') }} />
                                     <h5 className="m-0 p-0">to</h5>
-                                    <input className="bg-red-200 rounded" type="date" value={filterEndDateReturnToVendor} onChange={(e) => {setFilterEndDateReturnToVendor(e.target.value), queryClient.invalidateQueries('ordersAccountsReturnToSender')}} />
+                                    <input className="bg-red-200 rounded" type="date" value={filterEndDateReturnToVendor} onChange={(e) => { setFilterEndDateReturnToVendor(e.target.value), queryClient.invalidateQueries('ordersAccountsReturnToSender') }} />
                                 </div>
                             </div>
                             <div className='w-full h-auto overflow-scroll'>
@@ -847,7 +863,7 @@ export default function Accounts() {
                                                     <td className="p-4 text-center text-nowrap">{a?.trackingId}</td>
                                                     <td className="p-4 text-center text-nowrap">
                                                         <button
-                                                            onClick={() => updateAccStatusFun(a?._id, 'Amount - Delivered')}
+                                                            onClick={() => updateAccStatusFun(a?._id, 'Amount - Delivered', 'ordersAccountsReturnToSender')}
                                                             className="bg-blue-500 text-white rounded p-2"
                                                         >
                                                             Confirm
