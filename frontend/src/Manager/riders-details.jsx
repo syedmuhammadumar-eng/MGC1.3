@@ -973,6 +973,12 @@ export default function RidersDetails() {
         }
     })
     function blockUserFun(id, status) {
+        const isConfirmed = window.confirm(
+            status === "blocked"
+                ? "Are you sure you want to update its status?"
+                : "Are you sure you want to update its status?"
+        );
+        if (!isConfirmed) return;
         blockUserMutation.mutate({ id, status })
     }
     const isBlocking = blockUserMutation.isPending;
@@ -1239,8 +1245,8 @@ export default function RidersDetails() {
                                     ?
                                     <div className="w-full flex flex-col gap-2">
                                         <div className="flex flex-col md:flex-row items-center justify-between">
-                                            <h2 className="text-2xl!">Delivered {filterStartDateDelivery !== "" || filterEndDateDelivery !== "" ? filterStartDateDelivery + " to " + filterEndDateDelivery : "All Orders"}</h2>
-                                            <button onClick={generatePDFDelivery} className="bg-green-600 rounded text-white p-2">Generate PDF</button>
+                                            <h5 className="text-2xl!">Delivered {filterStartDateDelivery !== "" || filterEndDateDelivery !== "" ? filterStartDateDelivery + " to " + filterEndDateDelivery : "All Orders"}</h5>
+                                            <button onClick={generatePDFDelivery} className="bg-blue-600 rounded text-white p-2">Generate PDF</button>
                                             <div className="flex items-center gap-2">
                                                 <label className="text-red-500 font-bold">Set Filter : </label>
                                                 <h5 className="m-0 p-0">from</h5>
@@ -1302,8 +1308,8 @@ export default function RidersDetails() {
                                     ?
                                     <div className="w-full flex flex-col gap-2">
                                         <div className="flex  flex-col md:flex-row items-center justify-between">
-                                            <h2 className="text-2xl!">Picked {filterStartDatePickup !== "" || filterEndDatePickup !== "" ? filterStartDatePickup + " to " + filterEndDatePickup : "All Orders"}</h2>
-                                            <button onClick={generatePDFPickup} className="bg-green-600 rounded text-white p-2">Generate PDF</button>
+                                            <h5 className="text-2xl!">Picked {filterStartDatePickup !== "" || filterEndDatePickup !== "" ? filterStartDatePickup + " to " + filterEndDatePickup : "All Orders"}</h5>
+                                            <button onClick={generatePDFPickup} className="bg-blue-600 rounded text-white p-2">Generate PDF</button>
                                             <div className="flex items-center gap-2">
                                                 <label className="text-red-500 font-bold">Set Filter : </label>
                                                 <h5 className="m-0 p-0">from</h5>
@@ -1369,8 +1375,8 @@ export default function RidersDetails() {
                                     ?
                                     <div className="w-full flex flex-col gap-2">
                                         <div className="flex flex-col md:flex-row items-center justify-between">
-                                            <h2 className="text-2xl!">Returned {filterStartDateReturn !== "" || filterEndDateReturn !== "" ? filterStartDateReturn + " to " + filterEndDateReturn : "All Orders"}</h2>
-                                            <button onClick={generatePDFReturn} className="bg-green-600 rounded text-white p-2">Generate PDF</button>
+                                            <h5 className="text-2xl!">Returned {filterStartDateReturn !== "" || filterEndDateReturn !== "" ? filterStartDateReturn + " to " + filterEndDateReturn : "All Orders"}</h5>
+                                            <button onClick={generatePDFReturn} className="bg-blue-600 rounded text-white p-2">Generate PDF</button>
                                             <div className="flex items-center gap-2">
                                                 <label className="text-red-500 font-bold">Set Filter : </label>
                                                 <h5 className="m-0 p-0">from</h5>

@@ -358,7 +358,13 @@ export default function UsersDetail() {
         }
     })
     function blockUserFun(id, status) {
-        blockUserMutation.mutate({ id, status })
+        const isConfirmed = window.confirm(
+            status === "blocked"
+                ? "Are you sure you want to unblock this user?"
+                : "Are you sure you want to block this user?"
+        );
+        if (!isConfirmed) return;
+        blockUserMutation.mutate({ id, status });
     }
     const isBlocking = blockUserMutation.isPending;
 
@@ -451,8 +457,8 @@ export default function UsersDetail() {
                             </div>
                             <div className="w-full flex flex-col gap-2">
                                 <div className="flex flex-col md:flex-row items-center justify-between">
-                                    <h2>{filterStartDate !== "" || filterEndDate !== "" ? filterStartDate + " to " + filterEndDate : "All Orders"}</h2>
-                                    <button onClick={generatePDF} className="bg-green-600 rounded text-white p-2">Generate PDF</button>
+                                    <h5>{filterStartDate !== "" || filterEndDate !== "" ? filterStartDate + " to " + filterEndDate : "All Orders"}</h5>
+                                    <button onClick={generatePDF} className="bg-blue-600 rounded text-white p-2">Generate PDF</button>
                                     <div className="flex items-center gap-2">
                                         <label className="text-red-500 font-bold">Set Filter : </label>
                                         <h5 className="m-0 p-0">from</h5>

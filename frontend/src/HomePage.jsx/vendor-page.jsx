@@ -715,7 +715,7 @@ export default function VendorPage() {
                                                     </div>
                                                     <div className="flex items-center justify-between border-b-2 border-gray-500 px-2 py-0.5">
                                                         <div className="px-1 py-2">
-                                                            <img src="http://localhost:5173/src/assets/MGC.png" className="h-8 object-contain" />
+                                                            <img src={logo} className="h-8 object-contain" />
                                                         </div>
 
                                                         <div className="flex items-center gap-4">
