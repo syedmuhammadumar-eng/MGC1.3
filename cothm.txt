@@ -1,0 +1,202 @@
+
+
+
+Root Password Vps: NovaPL.Cothm@123
+
+
+SSH: 
+
+Ip address: 72.62.70.42
+
+
+ssh key command to run on terminal: ssh-keygen -t ed25519 -C "ssyedmuhammadumar.developer@gmail.com"
+
+File name: MGCSERVER
+
+Your identification has been saved in cothmMgc
+Your public key has been saved in cothmMgc.pub
+The key fingerprint is:
+SHA256:Q0OQP20rsNM619V8NOf2ihgk7UIpPPTXOkCAk8Oseuo ssyedmuhammadumar.developer@gmail.com
+The key's randomart image is:
++--[ED25519 256]--+
+|   o ooo.        |
+|    B .o         |
+|   . o..+.       |
+|  .  o.+o+o.   .o|
+| .    ++So+..o oo|
+|. .   o+oB... o +|
+| o     o.o=.   o.|
+|.     o ...+ .  .|
+|.E     o  . . .. |
++----[SHA256]-----+
+
+
+.pub ssh key content: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP/p23t40sJfbckSZTStNfhJ99RCrgcU18uh6+RiUQdy ssyedmuhammadumar.developer@gmail.com
+
+Hostname  srv1340615.hstgr.cloud
+
+---------------------------------------------------------->
+
+Vps root/Terminal acess: ssh root@72.62.70.42
+
+ssh password/root password: cothm@Nova1234
+
+All of these to connect with vps terminal
+--------------------------------------------------------->
+
+FOR UPDATING CODE:
+// cd /var/www
+//cd MGC1.3
+//cd backend
+// nano server.js
+//make changes then ctrl + x  then y then enter
+
+
+//----------Backend Restart
+//pm2 restart server.js --name project-backend
+
+//----------Frontend Restart
+// npm run build
+// systemctl restart nginx
+
+
+---------------------------------------------------------->
+
+ssh username: root
+ssh root@72.62.70.42
+
+IPv4:  72.62.70.42  
+72.62.70.42
+
+port 22
+
+
+
+-------------------------------------------------------->
+
+https://github.com/syedmuhammadumar-eng/MGC1.3.git
+
+github token:   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
+
+syedmuhammadumar-eng
+--------------------------DEPLOYMENT VPS------------------------------>
+
+
+0- Step 0.0
+
+- Frontend: backend api url / File name: backendLink.js ,
+- Backend: Cors policy ulrs, socit.io links  Filename : script.js /
+- mongoose.js File name backend,  database url  
+
+
+
+
+1- Step 1
+
+- connect window Terminal with vps through vps server
+- prepare vps server 
+- update vps root directory like root@srv1340615:~#
+- 1st sudo apt update
+- 2nd sudo apt upgrade -y 
+- 3rd: install node.js :   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash    Note: update the node version in this command.   nvm install 22
+- 4th: install Git:     sudo apt install -y git
+- 5th: install mongodb, not atlas :   sudo apt-get install gnupg curl
+
+
+
+2- CHECKLIST:
+
+1- node.js installed done
+2- git installed done
+3- nvm installed done
+4- curl and somthing done
+5- mongodb installed done
+6- MongoDB URI to connect with projects.  provide this   mongodb://127.0.0.1:27017 to express app to connect with database {pending}
+
+
+
+3- Deploying the Express and Node.js Backend: github file
+
+
+1 - https://github.com/syedmuhammadumar-eng/MGC1.3.git
+2-  project name in video: forever / in our case: MGC1.3 > backend frontend same as video | in video frontend and backend is client side
+3-  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

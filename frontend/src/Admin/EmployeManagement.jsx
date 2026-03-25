@@ -173,7 +173,11 @@ export default function EmployeManagement() {
         }
     })
     function deleteEmploye(id) {
-        deleteEmployeMutation.mutate(id)
+        const isConfirmed = window.confirm(
+            "Are you sure you want to delete this employee?"
+        );
+        if (!isConfirmed) return;
+        deleteEmployeMutation.mutate(id);
     }
 
     const filteredData = apiData?.filter((item) =>

@@ -55,14 +55,36 @@ export default function FormLoader() {
             return [];
         }
         if (!data?.ok) {
+            await delay(1000);
+            navigate('/', {
+                state: {
+                    from: '/order-form',
+                    message: 'You need to Login again',
+                    timestamp: Date.now()
+                },
+                replace: true
+            });
             throw new Error(`HTTP error! status: ${data.status}`);
         }
         const info = await data.json()
-        if(info?.message === "approved"){
+        if (info?.message === "approved") {
             navigate('/order-form')
         }
-        if(info?.message === "vendor"){
+        if (info?.message === "vendor") {
             navigate('/vendor-page')
+        }
+
+        if (info?.message === "admin") {
+            navigate('/admin')
+        }
+        if (info?.message === "manager") {
+            navigate('/Manager')
+        }
+        if (info?.message === "accountant") {
+            navigate('/Accountant')
+        }
+        if (info?.message === "rider") {
+            navigate('/rider')
         }
         return []
     }

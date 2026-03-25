@@ -442,7 +442,6 @@ export default function VendorPage() {
         );
         if (!isConfirmed) return;
         blockUserMutation.mutate({ id, status });
-        // blockUserMutation.mutate({ id, status })
     }
     const isBlocking = blockUserMutation.isPending;
 

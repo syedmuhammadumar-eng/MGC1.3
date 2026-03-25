@@ -133,7 +133,17 @@ const authenticateVendorAndApprovedUserToken = async (req, res, next) => {
         }
         req.user = user;
 
-        let userIN = await UserModel.findOne({ _id: req.user.userId })
+        if(req.user?.userId === "adminId"){
+            return res.status(200).json({ message: 'admin' });
+        }
+
+        let userIN;
+        try{
+            userIN = await UserModel.findOne({ _id: req.user?.userId })
+        }
+        catch(err){
+            return next(new HttpError('Authentication Error', 500))
+        }
 
         if (userIN?.status === "vendor") {
             return res.status(200).json({ message: 'vendor' });
@@ -141,6 +151,22 @@ const authenticateVendorAndApprovedUserToken = async (req, res, next) => {
 
         if (userIN?.status === "approved") {
             return res.status(200).json({ message: 'approved' });
+        }
+
+        if (userIN?.status === "manager") {
+            return res.status(200).json({ message: 'manager' });
+        }
+        if (userIN?.status === "accountant") {
+            return res.status(200).json({ message: 'accountant' });
+        }
+
+        if(!userIN){
+            const rider = await ridersModel.findById(req.user?.ridersId)
+            if(rider){
+                return res.status(200).json({ message: 'rider' });
+            }else{
+                return next(new HttpError('Only vendor is authenticated', 403))
+            }
         }
 
         return next(new HttpError('Only vendor is authenticated', 403))
